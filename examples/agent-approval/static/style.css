@@ -8,3 +8,18 @@
 @media(max-width:960px){.brand>span,.workspace,.nav-label,.sidebar-bottom{display:none}.sidebar nav{margin-top:38px}.brand{min-height:36px}}
 label,input,select,textarea{font-size:14px}.check-row strong{font-size:13px}.check-row p{font-size:12px}.scenario strong{font-size:14px}.scenario small{font-size:12px}.note-bar p{font-size:12px}.receipt p,.footnote{font-size:12px}.review-payload{white-space:pre-wrap;overflow-wrap:anywhere;max-height:130px;overflow:auto;background:#fff;border-radius:5px;padding:10px;font-size:12px}
 @media(min-width:601px) and (max-width:960px){.sidebar{width:176px;padding:24px 14px}main{margin-left:176px}.brand{gap:8px;justify-content:flex-start}.brand>span{display:block;font-size:18px;letter-spacing:-.5px}.brand img{width:32px;height:32px}.brand small{font-size:10px;letter-spacing:0}.sidebar .nav{font-size:13px;justify-content:flex-start;gap:9px;padding:13px 9px}.sidebar .nav>span{font-size:20px}.sidebar .nav b{font-size:11px}.content{padding-inline:20px}.scenarios{grid-template-columns:repeat(3,1fr)}}
+
+/* Language controls and wrapping for longer English labels. */
+.language-switch{border:1px solid #b9c8ad;border-radius:6px;padding:4px 9px;font-size:12px;white-space:nowrap;color:var(--green);background:var(--surface)}
+html[lang=en] .brand small{letter-spacing:0}
+html[lang=en] .topbar{height:auto;min-height:66px;gap:12px;padding-block:10px;flex-wrap:wrap}
+html[lang=en] .top-tags{flex-wrap:wrap;gap:6px}
+html[lang=en] .topbar .top-tags>span{margin:0 4px}
+html[lang=en] .policy-tag{font-size:11px}
+html[lang=en] .button{white-space:normal}
+html[lang=en] .verdict-head{flex-wrap:wrap}
+html[lang=en] .panel-heading{flex-wrap:wrap}
+html[lang=en] .check-level{max-width:60px;text-align:right}
+html[lang=en] .version-option{gap:12px}
+html[lang=en] .version-option>span{flex-shrink:0}
+@media(max-width:600px){html[lang=en] .top-tags{justify-content:flex-end}html[lang=en] .form-grid{grid-template-columns:1fr}html[lang=en] .section-heading{align-items:flex-start;flex-direction:column}html[lang=en] .pill{white-space:normal}html[lang=en] .mini-flow{flex-wrap:wrap}html[lang=en] .dialog-actions{gap:10px}}

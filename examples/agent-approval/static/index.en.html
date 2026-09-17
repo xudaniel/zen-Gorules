@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#183e35"><title>AgentGate · AI action approvals</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/style.css"><script src="/app.en.js" defer></script></head>
+<body>
+<aside class="sidebar">
+ <a class="brand" href="/en/"><img src="/favicon.svg" alt=""><span>AgentGate<small>AI action approvals</small></span></a>
+ <div class="workspace"><span class="workspace-icon">D</span><div>Daniel’s workspace<small>GoRules decision lab</small></div></div>
+ <div class="nav-label">WORKSPACE</div>
+ <nav aria-label="Main navigation"><button class="nav active" data-page="console" title="Action lab"><span>◈</span> Action lab</button><button class="nav" data-page="approvals" title="Human review"><span>◎</span> Human review <b id="pending-badge">0</b></button><button class="nav" data-page="audit" title="Audit timeline"><span>≋</span> Audit timeline</button><button class="nav" data-page="policy" title="Policies"><span>◇</span> Policies</button></nav>
+ <div class="sidebar-bottom"><div class="engine-dot">ZEN Engine · Connected</div><p>Live rule evaluation<br>All tool actions are simulated</p><div class="avatar-row"><span class="avatar">DX</span><div>Daniel Xu<small>Demo operator</small></div></div></div>
+</aside>
+<main>
+ <header class="topbar"><div>Workspace <span>/</span> <strong id="breadcrumb">Action lab</strong></div><div class="top-tags"><a class="language-switch" href="/" lang="zh-CN" hreflang="zh-CN" title="Switch language (reloads page)">中文</a><span class="pill neutral">Local simulation</span><span class="policy-tag" id="policy-tag">Policy v1</span></div></header>
+ <div class="content">
+  <section class="page-heading"><div><div class="eyebrow">GOVERN EVERY ACTION</div><h1 id="page-title">Rules govern the next AI action.</h1><p id="page-description">Choose a scenario to explore why an action is allowed, blocked, or sent for review.</p></div><a class="text-link" href="/rules/agent-approval.en.json" download="agent-approval.en.json">Download decision graph <span>↗</span></a></section>
+  <div class="metrics"><article><span>Decision checks</span><strong>08 <small>modules</small></strong><div>Identity, data, destination & more</div></article><article><span>Decision rules</span><strong>43 <small>rules</small></strong><div>Evaluated by the real GoRules engine</div></article><article><span>Awaiting review</span><strong id="metric-pending">0</strong><div>Each required role must approve</div></article><article><span>Simulated executions</span><strong id="metric-executed">0</strong><div>Every grant is single-use</div></article></div>
+  <section id="page-console" class="page">
+   <div class="section-heading"><h2>Start with a scenario</h2><span>Choose → Evaluate → Review or execute</span></div>
+   <div id="scenarios" class="scenarios"></div>
+   <div class="workbench">
+    <section class="panel request-panel"><div class="panel-heading"><div><span class="step">01</span><h2>Action request</h2></div><span id="scenario-name" class="muted">Read public information</span></div>
+     <form id="request-form">
+      <div class="form-grid">
+       <label>Agent<select name="agent"><option value="operations">Atlas · Operations assistant</option><option value="research">Iris · Research assistant</option><option value="retired">Echo · Disabled</option></select></label>
+       <label>Environment<select name="environment"><option value="sandbox">Sandbox · Test environment</option><option value="production">Production · Live environment</option></select></label>
+       <label>Proposed action<select name="action"><option value="read_file">Read a file</option><option value="send_email">Send an email</option><option value="update_record">Update records</option><option value="http_request">Call an API</option><option value="delete_records">Delete records</option></select></label>
+       <label>Declared data classification<select name="data_class"><option value="public">Public</option><option value="internal">Internal</option><option value="customer">Customer data</option><option value="secret">Secret / credentials</option></select></label>
+       <label class="full">Destination / recipient<input name="target" required maxlength="300" autocomplete="off"></label>
+       <label>Record count<input name="records" type="number" min="1" max="100000" step="1" required></label><label>Estimated cost · demo credits<input name="cost" type="number" min="0" max="1000000" step="0.01" required></label>
+       <label class="full">Business purpose<input name="purpose" required maxlength="500"></label>
+       <label class="full">Change ticket <span class="optional">optional</span><input name="ticket" placeholder="e.g. CHG-DEMO-204" maxlength="120"></label>
+       <label class="full">Action payload<textarea name="payload" rows="4" maxlength="15000"></textarea></label>
+      </div>
+      <div class="form-bottom"><span>Use fictional demo data only</span><button type="submit" class="button primary" id="evaluate-button">Evaluate action <span>→</span></button></div>
+     </form>
+    </section>
+    <section class="panel decision-panel"><div class="panel-heading"><div><span class="step">02</span><h2>Decision & execution</h2></div><span class="live-label">● GoRules</span></div><div id="decision"><div class="empty-state"><div class="empty-icon">◇</div><h3>Every decision has a reason.</h3><p>Choose an action and click “Evaluate action”.<br>Results from all eight checks will appear here.</p><div class="mini-flow"><span>Request</span><i>→</i><span>Rule checks</span><i>→</i><span>Execute / review</span></div></div></div></section>
+   </div>
+   <div class="note-bar"><span>i</span><p>This demo simulates all actions. It sends no real emails, calls no external APIs, and changes no real data. Reviewer identities are simulated.</p></div>
+  </section>
+  <section id="page-approvals" class="page" hidden><div class="section-heading"><h2>Review queue</h2><span>A grant is issued only after every required role approves</span></div><div id="approval-list"></div></section>
+  <section id="page-audit" class="page" hidden><div class="section-heading"><h2>Action audit</h2><div class="audit-controls"><span id="chain-status"></span><button class="button secondary small" id="export-audit">Export events ↓</button></div></div><div class="panel audit-panel"><div id="audit-list"></div></div><p class="footnote">The hash chain detects accidental changes; it is not an independent or administrator-proof audit record. Data stays on this computer.</p></section>
+  <section id="page-policy" class="page" hidden><div class="policy-layout"><section class="panel policy-switch"><div class="eyebrow">POLICY CONTROL</div><h2>Change the rules. Explore the limits.</h2><p>Both versions use the same graph with different batch review thresholds. Switching versions revokes all unused grants and pending requests.</p><div id="versions"></div><div class="note-bar"><span>i</span><p>Try “Compare policy versions”: 80 records are allowed under v1 and require review under v2.</p></div></section><section class="panel"><div class="panel-heading"><h2>Eight checks</h2><span class="muted">Highest risk wins</span></div><div id="policy-checks"></div></section></div><section class="panel boundaries"><h2>What this demo does</h2><div><article><h3>Real decisions and grants</h3><p>GoRules evaluation, multi-role approval, five-minute expiry, content binding, pre-execution checks, and single-use grants.</p></article><article><h3>Simulated tools and identities</h3><p>Tools return simulated receipts. Reviewers are preset demo identities, with no connection to enterprise accounts, email, or production systems.</p></article><article><h3>Limited content detection</h3><p>Detects demo secret markers, email addresses, Chinese mobile numbers, and a few suspicious phrases. This is not complete DLP or prompt-injection protection.</p></article></div></section></section>
+  <footer><span>AgentGate / GoRules Demo</span><span>Explainable decisions · Controlled actions</span></footer>
+ </div>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<dialog id="review-dialog"><form id="review-form"><div class="dialog-heading"><div><div class="eyebrow">HUMAN IN THE LOOP</div><h2>Human review</h2></div><button class="icon-button" type="button" id="close-review" aria-label="Close review dialog">×</button></div><div id="review-summary"></div><label>Demo reviewer<select id="reviewer"></select></label><label>Review note<textarea id="review-note" rows="3" required minlength="5" maxlength="500" placeholder="e.g. Recipient and business purpose checked. Approved for this action."></textarea></label><p class="footnote">This demonstrates role checks. The requester cannot approve their own request.</p><div class="dialog-actions"><button class="button danger-outline" type="button" id="reject-button">Reject request</button><button class="button primary" type="submit">Approve request</button></div></form></dialog>
+</body></html>

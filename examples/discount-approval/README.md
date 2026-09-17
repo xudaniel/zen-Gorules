@@ -1,5 +1,9 @@
 # 折扣审批 Demo
 
+[简体中文](README.md) · [English](README.en.md)
+
+英文版请导入 [discount-approval.en.json](../../test-data/discount-approval.en.json)，规则条件与中文版一致，输出英文审批结果。
+
 这是 GoRules 在线编辑器中演示的三个审批规则，保存为可导入的 JDM 文件，并接入 Python 同步测试套件。
 
 ## 先在网页里试
@@ -37,7 +41,7 @@ python -m unittest bindings.python.test_sync.ZenEngine.test_discount_approval_de
 
 Windows 中将激活命令换成 `.temp\discount-approval-venv\Scripts\activate`。
 
-上述命令使用发布的 `zen-engine==2.0.2`，不需要编译 Rust 源码。测试直接调用真实 ZEN 引擎，分别验证 `engine.evaluate` 和 `decision.evaluate` 的完整输出，没有用 Python 重写审批逻辑。成功时显示 `OK`；unittest 将九个输入作为一个测试方法中的九个子测试。
+上述命令使用发布的 `zen-engine==2.0.2`，不需要编译 Rust 源码。测试直接调用真实 ZEN 引擎，分别验证 `engine.evaluate` 和 `decision.evaluate` 的完整输出，没有用 Python 重写审批逻辑。成功时显示 `OK`；unittest 在一个测试方法中分别检查中英文各九个输入，共十八个子测试。
 
 | 输入 discount | 预期 approval |
 |---|---|

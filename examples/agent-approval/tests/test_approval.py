@@ -361,6 +361,17 @@ class HTTPTests(unittest.TestCase):
         with urlopen(self.url+'/rules/agent-approval.json') as r: graph=json.load(r)
         self.assertEqual(len(graph['nodes']),12)
 
+    def test_english_routes_and_chinese_switch(self):
+        for path, marker in [('/en/', b'Rules govern the next AI action.'), ('/', b'href="/en/"'), ('/app.en.js', b'window.agentGateTranslate')]:
+            with self.subTest(path=path):
+                with urlopen(self.url+path) as response:
+                    self.assertEqual(response.status, 200)
+                    self.assertIn(marker, response.read())
+        with urlopen(self.url+'/rules/agent-approval.en.json') as response:
+            graph = json.load(response)
+        self.assertEqual(len(graph['nodes']), 12)
+        self.assertEqual(graph['nodes'][0]['name'], 'Action request')
+
     def test_invalid_body(self):
         with self.assertRaises(HTTPError) as e:self.post('/api/evaluate',{})
         self.assertEqual(e.exception.code,400)

@@ -36,9 +36,10 @@ def create_server(service, port=8767):
                 return self.reply(200,dict(service.config(),csrf=csrf))
             if path=='/api/state':
                 return self.reply(200,service.state())
-            files={'/':('index.html','text/html; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/style.css':('style.css','text/css; charset=utf-8'),'/favicon.svg':('favicon.svg','image/svg+xml')}
-            if path=='/rules/agent-approval.json':
-                return self.reply(200,service.rule_content.encode(),'application/octet-stream')
+            files={'/':('index.html','text/html; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/en/':('index.en.html','text/html; charset=utf-8'),'/app.en.js':('app.en.js','text/javascript; charset=utf-8'),'/style.css':('style.css','text/css; charset=utf-8'),'/favicon.svg':('favicon.svg','image/svg+xml')}
+            if path in ('/rules/agent-approval.json','/rules/agent-approval.en.json'):
+                content=service.rule_content.encode() if path.endswith('/agent-approval.json') else (ROOT/'rules'/'agent-approval.en.json').read_bytes()
+                return self.reply(200,content,'application/octet-stream')
             if path not in files:
                 return self.reply(404,{'error':'NOT_FOUND','message':'页面不存在。'})
             name,kind=files[path]

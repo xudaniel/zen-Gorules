@@ -1,0 +1,166 @@
+{
+  "contentType": "application/vnd.gorules.decision",
+  "nodes": [
+    {
+      "id": "request",
+      "type": "inputNode",
+      "name": "Request",
+      "position": {
+        "x": 100,
+        "y": 200
+      }
+    },
+    {
+      "id": "discount-approval",
+      "type": "decisionTableNode",
+      "name": "Discount approval",
+      "position": {
+        "x": 400,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "discount",
+            "name": "Discount percentage",
+            "type": "expression",
+            "field": "discount"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "approval",
+            "name": "Approval result",
+            "type": "expression",
+            "field": "approval"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "automatic",
+            "discount": "<= 5",
+            "approval": "\"Automatically approved\""
+          },
+          {
+            "_id": "sales-manager",
+            "discount": "<= 10",
+            "approval": "\"Sales manager approval\""
+          },
+          {
+            "_id": "general-manager",
+            "discount": "> 10",
+            "approval": "\"General manager approval\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "response",
+      "type": "outputNode",
+      "name": "Response",
+      "position": {
+        "x": 700,
+        "y": 200
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "request-to-rules",
+      "sourceId": "request",
+      "targetId": "discount-approval",
+      "type": "edge"
+    },
+    {
+      "id": "rules-to-response",
+      "sourceId": "discount-approval",
+      "targetId": "response",
+      "type": "edge"
+    }
+  ],
+  "tests": [
+    {
+      "input": {
+        "discount": 3
+      },
+      "output": {
+        "discount": 3,
+        "approval": "Automatically approved"
+      }
+    },
+    {
+      "input": {
+        "discount": 8
+      },
+      "output": {
+        "discount": 8,
+        "approval": "Sales manager approval"
+      }
+    },
+    {
+      "input": {
+        "discount": 15
+      },
+      "output": {
+        "discount": 15,
+        "approval": "General manager approval"
+      }
+    },
+    {
+      "input": {
+        "discount": 0
+      },
+      "output": {
+        "discount": 0,
+        "approval": "Automatically approved"
+      }
+    },
+    {
+      "input": {
+        "discount": 5
+      },
+      "output": {
+        "discount": 5,
+        "approval": "Automatically approved"
+      }
+    },
+    {
+      "input": {
+        "discount": 5.01
+      },
+      "output": {
+        "discount": 5.01,
+        "approval": "Sales manager approval"
+      }
+    },
+    {
+      "input": {
+        "discount": 10
+      },
+      "output": {
+        "discount": 10,
+        "approval": "Sales manager approval"
+      }
+    },
+    {
+      "input": {
+        "discount": 10.01
+      },
+      "output": {
+        "discount": 10.01,
+        "approval": "General manager approval"
+      }
+    },
+    {
+      "input": {
+        "discount": 100
+      },
+      "output": {
+        "discount": 100,
+        "approval": "General manager approval"
+      }
+    }
+  ]
+}

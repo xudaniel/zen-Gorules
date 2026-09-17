@@ -1,0 +1,863 @@
+{
+  "contentType": "application/vnd.gorules.decision",
+  "nodes": [
+    {
+      "id": "request",
+      "type": "inputNode",
+      "name": "Action request",
+      "position": {
+        "x": 0,
+        "y": 200
+      }
+    },
+    {
+      "id": "identity",
+      "type": "decisionTableNode",
+      "name": "Identity & permissions",
+      "position": {
+        "x": 300,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "Condition",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.identity.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.identity.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.identity.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.identity.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "AGENT_DISABLED",
+            "condition": "facts.agent_active == false",
+            "severity": "4",
+            "code": "\"AGENT_DISABLED\"",
+            "reason": "\"The agent is disabled\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "SCOPE_DENIED",
+            "condition": "facts.scope_allowed == false",
+            "severity": "4",
+            "code": "\"SCOPE_DENIED\"",
+            "reason": "\"The agent does not have permission to use this tool\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "DELETE_OWNER",
+            "condition": "request.action == \"delete_records\"",
+            "severity": "3",
+            "code": "\"DELETE_OWNER\"",
+            "reason": "\"Deletion requires business owner approval\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "IDENTITY_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"IDENTITY_OK\"",
+            "reason": "\"The agent is active and the action is within its permissions\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "data",
+      "type": "decisionTableNode",
+      "name": "Data classification",
+      "position": {
+        "x": 600,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "Condition",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.data.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.data.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.data.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.data.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "SECRET_EGRESS",
+            "condition": "facts.classification == \"secret\" and facts.external",
+            "severity": "4",
+            "code": "\"SECRET_EGRESS\"",
+            "reason": "\"Secrets and credentials must not be sent externally\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "SECRET_INTERNAL",
+            "condition": "facts.classification == \"secret\"",
+            "severity": "3",
+            "code": "\"SECRET_INTERNAL\"",
+            "reason": "\"Internal secret access requires security approval\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "PII_REDACT",
+            "condition": "facts.classification == \"customer\" and facts.external and facts.redactable",
+            "severity": "2",
+            "code": "\"PII_REDACT\"",
+            "reason": "\"Redact customer contact details before sending externally\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "PII_REVIEW",
+            "condition": "facts.classification == \"customer\" and facts.external",
+            "severity": "3",
+            "code": "\"PII_REVIEW\"",
+            "reason": "\"Customer data cannot be fully redacted automatically; security review required\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "INTERNAL_EGRESS",
+            "condition": "facts.classification == \"internal\" and facts.external",
+            "severity": "3",
+            "code": "\"INTERNAL_EGRESS\"",
+            "reason": "\"Sending internal data externally requires business owner approval\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "DATA_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"DATA_OK\"",
+            "reason": "\"The data classification permits this action\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "destination",
+      "type": "decisionTableNode",
+      "name": "Destination trust",
+      "position": {
+        "x": 900,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "Condition",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.destination.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.destination.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.destination.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.destination.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "TARGET_BLOCKED",
+            "condition": "facts.destination == \"blocked\"",
+            "severity": "4",
+            "code": "\"TARGET_BLOCKED\"",
+            "reason": "\"The destination is on the demo blocklist\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "UNKNOWN_API",
+            "condition": "facts.destination == \"external\" and request.action == \"http_request\"",
+            "severity": "3",
+            "code": "\"UNKNOWN_API\"",
+            "reason": "\"An unknown external API requires security review\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "NEW_RECIPIENT",
+            "condition": "facts.destination == \"external\" and request.action == \"send_email\"",
+            "severity": "3",
+            "code": "\"NEW_RECIPIENT\"",
+            "reason": "\"A new external recipient requires business owner approval\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "TRUSTED_TARGET",
+            "condition": "facts.destination == \"trusted\"",
+            "severity": "1",
+            "code": "\"TRUSTED_TARGET\"",
+            "reason": "\"The destination is a listed demo partner\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "TARGET_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"TARGET_OK\"",
+            "reason": "\"Destination check passed\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "environment",
+      "type": "decisionTableNode",
+      "name": "Environment",
+      "position": {
+        "x": 1200,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "Condition",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.environment.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.environment.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.environment.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.environment.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "PROD_DELETE",
+            "condition": "request.environment == \"production\" and request.action == \"delete_records\"",
+            "severity": "4",
+            "code": "\"PROD_DELETE\"",
+            "reason": "\"Demo policy forbids deleting production records\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "PROD_WRITE",
+            "condition": "request.environment == \"production\" and request.action == \"update_record\"",
+            "severity": "3",
+            "code": "\"PROD_WRITE\"",
+            "reason": "\"Production data changes require business owner approval\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "PROD_API",
+            "condition": "request.environment == \"production\" and request.action == \"http_request\"",
+            "severity": "3",
+            "code": "\"PROD_API\"",
+            "reason": "\"Production API actions require security approval\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "SANDBOX",
+            "condition": "request.environment == \"sandbox\"",
+            "severity": "1",
+            "code": "\"SANDBOX\"",
+            "reason": "\"Sandbox environment; data and permission limits still apply\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "ENV_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"ENV_OK\"",
+            "reason": "\"Environment check passed\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "volume",
+      "type": "decisionTableNode",
+      "name": "Action volume",
+      "position": {
+        "x": 1500,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "Condition",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.volume.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.volume.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.volume.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.volume.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "BULK_LIMIT",
+            "condition": "request.records > 1000",
+            "severity": "4",
+            "code": "\"BULK_LIMIT\"",
+            "reason": "\"More than 1,000 records in one action; execution blocked\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "RATE_LIMIT",
+            "condition": "facts.executions_hour >= 20",
+            "severity": "4",
+            "code": "\"RATE_LIMIT\"",
+            "reason": "\"20 executions in the last hour; demo rate limit reached\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "BULK_REVIEW",
+            "condition": "request.records > facts.review_record_limit",
+            "severity": "3",
+            "code": "\"BULK_REVIEW\"",
+            "reason": "\"Record count exceeds the current policy review threshold\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "BURST_REVIEW",
+            "condition": "facts.executions_hour >= 10",
+            "severity": "3",
+            "code": "\"BURST_REVIEW\"",
+            "reason": "\"Frequent actions in the last hour require security review\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "VOLUME_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"VOLUME_OK\"",
+            "reason": "\"Record count and recent frequency are within limits\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "budget",
+      "type": "decisionTableNode",
+      "name": "Cost & budget",
+      "position": {
+        "x": 1800,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "Condition",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.budget.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.budget.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.budget.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.budget.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "SINGLE_BUDGET",
+            "condition": "request.cost > 500",
+            "severity": "4",
+            "code": "\"SINGLE_BUDGET\"",
+            "reason": "\"Estimated action cost exceeds 500 demo credits\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "TOTAL_BUDGET",
+            "condition": "facts.cost_hour + request.cost > 1000",
+            "severity": "4",
+            "code": "\"TOTAL_BUDGET\"",
+            "reason": "\"Total cost in the last hour would exceed 1,000 demo credits\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "FINANCE_REVIEW",
+            "condition": "request.cost > 100",
+            "severity": "3",
+            "code": "\"FINANCE_REVIEW\"",
+            "reason": "\"Estimated cost exceeds 100 credits; finance approval required\"",
+            "reviewer": "\"finance\""
+          },
+          {
+            "_id": "BUDGET_OK",
+            "condition": "request.cost > 0",
+            "severity": "1",
+            "code": "\"BUDGET_OK\"",
+            "reason": "\"Estimated cost is within budget\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "NO_COST",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"NO_COST\"",
+            "reason": "\"This action uses no demo credits\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "content",
+      "type": "decisionTableNode",
+      "name": "Content & instructions",
+      "position": {
+        "x": 2100,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "Condition",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.content.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.content.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.content.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.content.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "PAYLOAD_LIMIT",
+            "condition": "facts.payload_bytes > 12000",
+            "severity": "4",
+            "code": "\"PAYLOAD_LIMIT\"",
+            "reason": "\"The payload exceeds the demo size limit\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "INSTRUCTION_REVIEW",
+            "condition": "facts.injection_signal",
+            "severity": "3",
+            "code": "\"INSTRUCTION_REVIEW\"",
+            "reason": "\"Suspicious instruction keywords detected; security review required\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "SECRET_SIGNAL",
+            "condition": "facts.secret_signal",
+            "severity": "3",
+            "code": "\"SECRET_SIGNAL\"",
+            "reason": "\"A secret marker was detected; review as confidential data\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "EMPTY_MESSAGE",
+            "condition": "request.action == \"send_email\" and facts.empty_payload",
+            "severity": "4",
+            "code": "\"EMPTY_MESSAGE\"",
+            "reason": "\"Email content must not be empty\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "CONTENT_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"CONTENT_OK\"",
+            "reason": "\"No issues detected by the demo content rules\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "context",
+      "type": "decisionTableNode",
+      "name": "Business purpose",
+      "position": {
+        "x": 2400,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "Condition",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.context.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.context.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.context.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.context.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "PURPOSE_MISSING",
+            "condition": "facts.purpose_length < 5",
+            "severity": "3",
+            "code": "\"PURPOSE_MISSING\"",
+            "reason": "\"Business purpose is shorter than five characters; owner review required\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "CHANGE_TICKET",
+            "condition": "request.environment == \"production\" and request.action != \"read_file\" and facts.ticket_missing",
+            "severity": "3",
+            "code": "\"CHANGE_TICKET\"",
+            "reason": "\"Production change has no ticket; owner approval required\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "READ_SCOPE",
+            "condition": "request.action == \"read_file\" and request.records > 50",
+            "severity": "3",
+            "code": "\"READ_SCOPE\"",
+            "reason": "\"A broad read requires business owner approval\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "CONTEXT_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"CONTEXT_OK\"",
+            "reason": "\"Business purpose and ticket checks passed\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "severity",
+      "type": "expressionNode",
+      "name": "Combine risk levels",
+      "position": {
+        "x": 2700,
+        "y": 200
+      },
+      "content": {
+        "passThrough": true,
+        "expressions": [
+          {
+            "id": "maximum",
+            "key": "severity",
+            "value": "max([checks.identity.severity, checks.data.severity, checks.destination.severity, checks.environment.severity, checks.volume.severity, checks.budget.severity, checks.content.severity, checks.context.severity])"
+          }
+        ]
+      }
+    },
+    {
+      "id": "verdict",
+      "type": "decisionTableNode",
+      "name": "Final decision",
+      "position": {
+        "x": 3000,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "severity",
+            "name": "Highest risk level",
+            "field": "severity"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "outcome",
+            "name": "Decision",
+            "field": "outcome"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "deny",
+            "severity": "4",
+            "outcome": "\"deny\""
+          },
+          {
+            "_id": "review",
+            "severity": "3",
+            "outcome": "\"review\""
+          },
+          {
+            "_id": "redact",
+            "severity": "2",
+            "outcome": "\"redact\""
+          },
+          {
+            "_id": "allow",
+            "severity": "1",
+            "outcome": "\"allow\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "response",
+      "type": "outputNode",
+      "name": "Approval result",
+      "position": {
+        "x": 3300,
+        "y": 200
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "request-identity",
+      "sourceId": "request",
+      "targetId": "identity",
+      "type": "edge"
+    },
+    {
+      "id": "identity-data",
+      "sourceId": "identity",
+      "targetId": "data",
+      "type": "edge"
+    },
+    {
+      "id": "data-destination",
+      "sourceId": "data",
+      "targetId": "destination",
+      "type": "edge"
+    },
+    {
+      "id": "destination-environment",
+      "sourceId": "destination",
+      "targetId": "environment",
+      "type": "edge"
+    },
+    {
+      "id": "environment-volume",
+      "sourceId": "environment",
+      "targetId": "volume",
+      "type": "edge"
+    },
+    {
+      "id": "volume-budget",
+      "sourceId": "volume",
+      "targetId": "budget",
+      "type": "edge"
+    },
+    {
+      "id": "budget-content",
+      "sourceId": "budget",
+      "targetId": "content",
+      "type": "edge"
+    },
+    {
+      "id": "content-context",
+      "sourceId": "content",
+      "targetId": "context",
+      "type": "edge"
+    },
+    {
+      "id": "context-severity",
+      "sourceId": "context",
+      "targetId": "severity",
+      "type": "edge"
+    },
+    {
+      "id": "severity-verdict",
+      "sourceId": "severity",
+      "targetId": "verdict",
+      "type": "edge"
+    },
+    {
+      "id": "verdict-response",
+      "sourceId": "verdict",
+      "targetId": "response",
+      "type": "edge"
+    }
+  ]
+}

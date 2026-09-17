@@ -1,8 +1,10 @@
 # AgentGate — AI 智能体操作审批台
 
-一个可以实际操作的中文 GoRules Demo：AI 准备执行动作时，先检查身份、权限、数据、目标、环境、规模、预算和业务上下文，再决定允许、脱敏、人工审批或拦截。
+[简体中文](README.md) · [English](README.en.md)
 
-**8 个检查模块 · 43 条决策规则 · 12 个场景 · 175 项自动化测试。**
+一个可以切换中英文、实际操作的 GoRules Demo：AI 准备执行动作时，先检查身份、权限、数据、目标、环境、规模、预算和业务上下文，再决定允许、脱敏、人工审批或拦截。
+
+**8 个检查模块 · 43 条决策规则 · 12 个场景 · 184 项自动化测试。**
 
 规则由真实 `zen-engine==2.0.2` 执行。无需 AI API key；智能体申请由预设案例和表单模拟生成。邮件、接口、读写与删除均由模拟工具返回回执，不会操作真实系统。
 
@@ -17,7 +19,7 @@ python -m pip install -r requirements.txt
 python server.py
 ```
 
-打开 **http://127.0.0.1:8767/**。关闭终端里的服务后网页将无法执行新操作。
+打开 **http://127.0.0.1:8767/**，英文版直接打开 **http://127.0.0.1:8767/en/**。右上角的 English / 中文 可切换语言。切换会重新加载网页，未保存的表单内容和页面内存中的授权凭据不会保留；本机申请与审计记录保留，需要执行时请重新评估。关闭终端里的服务后网页将无法执行新操作。
 
 Windows 将激活命令换成 `.venv\Scripts\activate`。Mac 也可在本目录运行 `./start.command`；首次启动会在独立虚拟环境安装依赖。
 
@@ -114,7 +116,7 @@ Simulator Request 可粘贴以下任一完整样例：
 python -m unittest discover -s tests -v
 ```
 
-175 项测试覆盖双版本案例、权限矩阵、数据与目标组合、额度临界值、非法输入、所有字段的授权绑定、多人会签、过期、规则切换、并发消费、执行前累计风险复核、持久化、哈希链和 HTTP 接口来源检查。
+184 项测试覆盖双版本案例、权限矩阵、数据与目标组合、额度临界值、非法输入、所有字段的授权绑定、多人会签、过期、规则切换、并发消费、执行前累计风险复核、持久化、哈希链和 HTTP 接口来源检查。
 
 测试直接运行真实 GoRules 引擎，没有另写一套 Python if/else 来冒充规则执行。规则由 [build_rules.py](build_rules.py) 生成；修改规则后执行 `python build_rules.py`，再运行测试。已有测试会检查生成内容与提交的 JDM 一致。
 
@@ -126,8 +128,8 @@ python -m unittest discover -s tests -v
 | `build_rules.py` | 可审阅的八项决策表定义及 JDM 生成 |
 | `rules/agent-approval.json` | 实际由引擎执行的决策图 |
 | `server.py` | 本机 HTTP 服务、静态页面和 JSON API |
-| `static/` | 中文表单、案例、审批、版本与审计界面 |
-| `tests/test_approval.py` | 175 项测试 |
+| `static/` | 中英文表单、案例、审批、版本与审计界面 |
+| `tests/` | 184 项测试，含中英文行为一致性与资源检查 |
 | `samples/` | 可粘贴到官方编辑器的固定输入 |
 
 ## 演示边界
@@ -137,3 +139,9 @@ python -m unittest discover -s tests -v
 内容识别仅覆盖演示邮箱、国内手机号、`sk_demo_` / `API_KEY=` / `password=` 标记以及少量越权关键词；不提供完整敏感数据发现或提示注入检测。哈希链可检测记录意外变动，但没有外部可信锚点，不保证防管理员篡改。规则源文件在服务启动时加载，修改后需重启服务。
 
 正常 API 支持申请、审批、执行、状态和策略切换。它不提供通用 HTTP 代理、Shell 执行、真实邮件发送或文件系统操作。
+
+## 英文资源与维护
+
+英文决策图：[agent-approval.en.json](rules/agent-approval.en.json)。英文输入样例：[脱敏邮件](samples/redact-mail.en.json)、[多人审批](samples/multi-review.en.json)、[密钥拦截](samples/secret.en.json)。
+
+修改规则、界面或样例后，运行 `python build_english.py` 生成英文资源，再运行测试。翻译集中在 `locales/en.json`；页面行为共用 `static/app.js`。用户输入、审批意见和审计导出保留原文，界面仅翻译系统文案与预设样例。

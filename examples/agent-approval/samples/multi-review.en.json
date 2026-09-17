@@ -1,0 +1,31 @@
+{
+  "request": {
+    "agent": "operations",
+    "environment": "production",
+    "action": "http_request",
+    "data_class": "public",
+    "target": "https://api.partner.example/process",
+    "records": 1,
+    "cost": 150,
+    "payload": "Read the public product overview and prepare the weekly summary.",
+    "purpose": "Prepare this week’s product briefing",
+    "ticket": "CHG-DEMO-208"
+  },
+  "facts": {
+    "agent_active": true,
+    "classification": "public",
+    "cost_hour": 0,
+    "destination": "trusted",
+    "empty_payload": false,
+    "executions_hour": 0,
+    "external": true,
+    "injection_signal": false,
+    "payload_bytes": 64,
+    "purpose_length": 36,
+    "redactable": false,
+    "review_record_limit": 100,
+    "scope_allowed": true,
+    "secret_signal": false,
+    "ticket_missing": false
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "request": {
+    "agent": "operations",
+    "environment": "sandbox",
+    "action": "send_email",
+    "data_class": "customer",
+    "target": "sales@partner.example",
+    "records": 1,
+    "cost": 0,
+    "payload": "Quote A-104\nCustomer email: customer@example.test\nPhone: 13800138000\nProduct: demo device × 5",
+    "purpose": "Prepare this week’s product briefing",
+    "ticket": ""
+  },
+  "facts": {
+    "agent_active": true,
+    "classification": "customer",
+    "cost_hour": 0,
+    "destination": "trusted",
+    "empty_payload": false,
+    "executions_hour": 0,
+    "external": true,
+    "injection_signal": false,
+    "payload_bytes": 94,
+    "purpose_length": 36,
+    "redactable": true,
+    "review_record_limit": 100,
+    "scope_allowed": true,
+    "secret_signal": false,
+    "ticket_missing": true
+  }
+}
