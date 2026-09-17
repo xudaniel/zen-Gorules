@@ -25,6 +25,25 @@ def custom_handler(request):
 
 # The test based on unittest module
 class ZenEngine(unittest.TestCase):
+    def test_discount_approval_demo(self):
+        key = "discount-approval.json"
+        # Resolve from this file so this demo test also works from the repo root.
+        fixture_path = os.path.join(os.path.dirname(__file__), "../../test-data", key)
+        with open(fixture_path, encoding="utf-8") as f:
+            content = f.read()
+        fixture = json.loads(content)
+        engine = zen.ZenEngine({"loader": lambda _: content})
+        decision = engine.create_decision(content)
+
+        for case in fixture["tests"]:
+            with self.subTest(discount=case["input"]["discount"]):
+                self.assertEqual(
+                    engine.evaluate(key, case["input"])["result"], case["output"]
+                )
+                self.assertEqual(
+                    decision.evaluate(case["input"])["result"], case["output"]
+                )
+
     def test_decision_using_loader(self):
         engine = zen.ZenEngine({"loader": loader})
         r1 = engine.evaluate("function.json", {"input": 5})

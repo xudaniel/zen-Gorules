@@ -1,0 +1,53 @@
+{
+  "contentType": "application/vnd.gorules.decision",
+  "nodes": [
+    {
+      "id": "request",
+      "type": "inputNode",
+      "name": "Request",
+      "position": {"x": 100, "y": 200}
+    },
+    {
+      "id": "discount-approval",
+      "type": "decisionTableNode",
+      "name": "折扣审批",
+      "position": {"x": 400, "y": 200},
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {"id": "discount", "name": "折扣百分比", "type": "expression", "field": "discount"}
+        ],
+        "outputs": [
+          {"id": "approval", "name": "审批结果", "type": "expression", "field": "approval"}
+        ],
+        "rules": [
+          {"_id": "automatic", "discount": "<= 5", "approval": "\"自动通过\""},
+          {"_id": "sales-manager", "discount": "<= 10", "approval": "\"销售经理审批\""},
+          {"_id": "general-manager", "discount": "> 10", "approval": "\"总经理审批\""}
+        ]
+      }
+    },
+    {
+      "id": "response",
+      "type": "outputNode",
+      "name": "Response",
+      "position": {"x": 700, "y": 200}
+    }
+  ],
+  "edges": [
+    {"id": "request-to-rules", "sourceId": "request", "targetId": "discount-approval", "type": "edge"},
+    {"id": "rules-to-response", "sourceId": "discount-approval", "targetId": "response", "type": "edge"}
+  ],
+  "tests": [
+    {"input": {"discount": 3}, "output": {"discount": 3, "approval": "自动通过"}},
+    {"input": {"discount": 8}, "output": {"discount": 8, "approval": "销售经理审批"}},
+    {"input": {"discount": 15}, "output": {"discount": 15, "approval": "总经理审批"}},
+    {"input": {"discount": 0}, "output": {"discount": 0, "approval": "自动通过"}},
+    {"input": {"discount": 5}, "output": {"discount": 5, "approval": "自动通过"}},
+    {"input": {"discount": 5.01}, "output": {"discount": 5.01, "approval": "销售经理审批"}},
+    {"input": {"discount": 10}, "output": {"discount": 10, "approval": "销售经理审批"}},
+    {"input": {"discount": 10.01}, "output": {"discount": 10.01, "approval": "总经理审批"}},
+    {"input": {"discount": 100}, "output": {"discount": 100, "approval": "总经理审批"}}
+  ]
+}
