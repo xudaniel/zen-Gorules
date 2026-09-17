@@ -43,6 +43,12 @@ Version 2.0 is the first stable release of the new engine line:
 
 ## Quickstart
 
+### Interactive demos in this fork
+
+- [AgentGate — AI 智能体操作审批台](examples/agent-approval/README.md): a local Chinese-language dashboard with eight GoRules checks, human co-approval, single-use grants, redaction, policy versions, audit history, and simulated tool execution.
+- [折扣审批 Demo](examples/discount-approval/README.md): an introductory decision table with boundary tests.
+
+
 ### Rust
 
 ```toml

@@ -1,0 +1,863 @@
+{
+  "contentType": "application/vnd.gorules.decision",
+  "nodes": [
+    {
+      "id": "request",
+      "type": "inputNode",
+      "name": "操作申请",
+      "position": {
+        "x": 0,
+        "y": 200
+      }
+    },
+    {
+      "id": "identity",
+      "type": "decisionTableNode",
+      "name": "身份与权限",
+      "position": {
+        "x": 300,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.identity.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.identity.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.identity.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.identity.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "AGENT_DISABLED",
+            "condition": "facts.agent_active == false",
+            "severity": "4",
+            "code": "\"AGENT_DISABLED\"",
+            "reason": "\"智能体已停用\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "SCOPE_DENIED",
+            "condition": "facts.scope_allowed == false",
+            "severity": "4",
+            "code": "\"SCOPE_DENIED\"",
+            "reason": "\"该智能体没有此工具的使用权限\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "DELETE_OWNER",
+            "condition": "request.action == \"delete_records\"",
+            "severity": "3",
+            "code": "\"DELETE_OWNER\"",
+            "reason": "\"删除操作需要业务负责人确认\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "IDENTITY_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"IDENTITY_OK\"",
+            "reason": "\"身份有效，操作在授权范围内\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "data",
+      "type": "decisionTableNode",
+      "name": "数据分级",
+      "position": {
+        "x": 600,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.data.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.data.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.data.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.data.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "SECRET_EGRESS",
+            "condition": "facts.classification == \"secret\" and facts.external",
+            "severity": "4",
+            "code": "\"SECRET_EGRESS\"",
+            "reason": "\"密钥或机密数据禁止发送到外部\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "SECRET_INTERNAL",
+            "condition": "facts.classification == \"secret\"",
+            "severity": "3",
+            "code": "\"SECRET_INTERNAL\"",
+            "reason": "\"内部机密访问需要安全人员批准\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "PII_REDACT",
+            "condition": "facts.classification == \"customer\" and facts.external and facts.redactable",
+            "severity": "2",
+            "code": "\"PII_REDACT\"",
+            "reason": "\"外发客户数据需先脱敏\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "PII_REVIEW",
+            "condition": "facts.classification == \"customer\" and facts.external",
+            "severity": "3",
+            "code": "\"PII_REVIEW\"",
+            "reason": "\"客户数据无法完整自动脱敏，需安全复核\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "INTERNAL_EGRESS",
+            "condition": "facts.classification == \"internal\" and facts.external",
+            "severity": "3",
+            "code": "\"INTERNAL_EGRESS\"",
+            "reason": "\"内部资料外发需要业务负责人批准\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "DATA_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"DATA_OK\"",
+            "reason": "\"数据分类允许此操作\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "destination",
+      "type": "decisionTableNode",
+      "name": "目标可信度",
+      "position": {
+        "x": 900,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.destination.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.destination.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.destination.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.destination.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "TARGET_BLOCKED",
+            "condition": "facts.destination == \"blocked\"",
+            "severity": "4",
+            "code": "\"TARGET_BLOCKED\"",
+            "reason": "\"目标命中演示禁止名单\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "UNKNOWN_API",
+            "condition": "facts.destination == \"external\" and request.action == \"http_request\"",
+            "severity": "3",
+            "code": "\"UNKNOWN_API\"",
+            "reason": "\"未知外部接口需要安全复核\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "NEW_RECIPIENT",
+            "condition": "facts.destination == \"external\" and request.action == \"send_email\"",
+            "severity": "3",
+            "code": "\"NEW_RECIPIENT\"",
+            "reason": "\"新外部联系人需要业务负责人确认\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "TRUSTED_TARGET",
+            "condition": "facts.destination == \"trusted\"",
+            "severity": "1",
+            "code": "\"TRUSTED_TARGET\"",
+            "reason": "\"目标属于演示合作方名单\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "TARGET_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"TARGET_OK\"",
+            "reason": "\"目标检查通过\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "environment",
+      "type": "decisionTableNode",
+      "name": "运行环境",
+      "position": {
+        "x": 1200,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.environment.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.environment.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.environment.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.environment.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "PROD_DELETE",
+            "condition": "request.environment == \"production\" and request.action == \"delete_records\"",
+            "severity": "4",
+            "code": "\"PROD_DELETE\"",
+            "reason": "\"演示政策禁止生产环境批量删除\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "PROD_WRITE",
+            "condition": "request.environment == \"production\" and request.action == \"update_record\"",
+            "severity": "3",
+            "code": "\"PROD_WRITE\"",
+            "reason": "\"生产数据修改需要业务负责人批准\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "PROD_API",
+            "condition": "request.environment == \"production\" and request.action == \"http_request\"",
+            "severity": "3",
+            "code": "\"PROD_API\"",
+            "reason": "\"生产环境接口操作需要安全人员批准\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "SANDBOX",
+            "condition": "request.environment == \"sandbox\"",
+            "severity": "1",
+            "code": "\"SANDBOX\"",
+            "reason": "\"测试环境，继续应用数据与权限限制\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "ENV_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"ENV_OK\"",
+            "reason": "\"运行环境检查通过\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "volume",
+      "type": "decisionTableNode",
+      "name": "操作规模",
+      "position": {
+        "x": 1500,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.volume.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.volume.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.volume.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.volume.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "BULK_LIMIT",
+            "condition": "request.records > 1000",
+            "severity": "4",
+            "code": "\"BULK_LIMIT\"",
+            "reason": "\"单次超过 1,000 条记录，禁止执行\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "RATE_LIMIT",
+            "condition": "facts.executions_hour >= 20",
+            "severity": "4",
+            "code": "\"RATE_LIMIT\"",
+            "reason": "\"近一小时已执行 20 次，达到演示频率上限\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "BULK_REVIEW",
+            "condition": "request.records > facts.review_record_limit",
+            "severity": "3",
+            "code": "\"BULK_REVIEW\"",
+            "reason": "\"记录数超过当前规则版本的人工复核阈值\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "BURST_REVIEW",
+            "condition": "facts.executions_hour >= 10",
+            "severity": "3",
+            "code": "\"BURST_REVIEW\"",
+            "reason": "\"近一小时操作密集，需要安全复核\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "VOLUME_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"VOLUME_OK\"",
+            "reason": "\"记录数与近期频率正常\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "budget",
+      "type": "decisionTableNode",
+      "name": "成本与额度",
+      "position": {
+        "x": 1800,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.budget.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.budget.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.budget.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.budget.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "SINGLE_BUDGET",
+            "condition": "request.cost > 500",
+            "severity": "4",
+            "code": "\"SINGLE_BUDGET\"",
+            "reason": "\"单次预计成本超过 500 演示点数\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "TOTAL_BUDGET",
+            "condition": "facts.cost_hour + request.cost > 1000",
+            "severity": "4",
+            "code": "\"TOTAL_BUDGET\"",
+            "reason": "\"近一小时累计成本将超过 1,000 演示点数\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "FINANCE_REVIEW",
+            "condition": "request.cost > 100",
+            "severity": "3",
+            "code": "\"FINANCE_REVIEW\"",
+            "reason": "\"预计成本超过 100 点，需要财务批准\"",
+            "reviewer": "\"finance\""
+          },
+          {
+            "_id": "BUDGET_OK",
+            "condition": "request.cost > 0",
+            "severity": "1",
+            "code": "\"BUDGET_OK\"",
+            "reason": "\"预计成本在预算范围内\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "NO_COST",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"NO_COST\"",
+            "reason": "\"本次操作不消耗演示点数\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "content",
+      "type": "decisionTableNode",
+      "name": "内容与指令",
+      "position": {
+        "x": 2100,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.content.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.content.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.content.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.content.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "PAYLOAD_LIMIT",
+            "condition": "facts.payload_bytes > 12000",
+            "severity": "4",
+            "code": "\"PAYLOAD_LIMIT\"",
+            "reason": "\"操作内容过大，超出演示允许范围\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "INSTRUCTION_REVIEW",
+            "condition": "facts.injection_signal",
+            "severity": "3",
+            "code": "\"INSTRUCTION_REVIEW\"",
+            "reason": "\"发现越权指令关键词，需要安全人员复核\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "SECRET_SIGNAL",
+            "condition": "facts.secret_signal",
+            "severity": "3",
+            "code": "\"SECRET_SIGNAL\"",
+            "reason": "\"发现疑似密钥标记，按机密数据复核\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "EMPTY_MESSAGE",
+            "condition": "request.action == \"send_email\" and facts.empty_payload",
+            "severity": "4",
+            "code": "\"EMPTY_MESSAGE\"",
+            "reason": "\"邮件内容不能为空\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "CONTENT_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"CONTENT_OK\"",
+            "reason": "\"内容检查未发现演示规则中的异常\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "context",
+      "type": "decisionTableNode",
+      "name": "业务理由",
+      "position": {
+        "x": 2400,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.context.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.context.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.context.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.context.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "PURPOSE_MISSING",
+            "condition": "facts.purpose_length < 5",
+            "severity": "3",
+            "code": "\"PURPOSE_MISSING\"",
+            "reason": "\"业务理由不足五个字符，需要负责人补充确认\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "CHANGE_TICKET",
+            "condition": "request.environment == \"production\" and request.action != \"read_file\" and facts.ticket_missing",
+            "severity": "3",
+            "code": "\"CHANGE_TICKET\"",
+            "reason": "\"生产变更没有关联工单，需要负责人批准\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "READ_SCOPE",
+            "condition": "request.action == \"read_file\" and request.records > 50",
+            "severity": "3",
+            "code": "\"READ_SCOPE\"",
+            "reason": "\"大范围读取需要业务负责人确认\"",
+            "reviewer": "\"owner\""
+          },
+          {
+            "_id": "CONTEXT_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"CONTEXT_OK\"",
+            "reason": "\"业务理由与工单检查通过\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "severity",
+      "type": "expressionNode",
+      "name": "合并风险等级",
+      "position": {
+        "x": 2700,
+        "y": 200
+      },
+      "content": {
+        "passThrough": true,
+        "expressions": [
+          {
+            "id": "maximum",
+            "key": "severity",
+            "value": "max([checks.identity.severity, checks.data.severity, checks.destination.severity, checks.environment.severity, checks.volume.severity, checks.budget.severity, checks.content.severity, checks.context.severity])"
+          }
+        ]
+      }
+    },
+    {
+      "id": "verdict",
+      "type": "decisionTableNode",
+      "name": "最终决策",
+      "position": {
+        "x": 3000,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "severity",
+            "name": "最高风险等级",
+            "field": "severity"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "outcome",
+            "name": "决策",
+            "field": "outcome"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "deny",
+            "severity": "4",
+            "outcome": "\"deny\""
+          },
+          {
+            "_id": "review",
+            "severity": "3",
+            "outcome": "\"review\""
+          },
+          {
+            "_id": "redact",
+            "severity": "2",
+            "outcome": "\"redact\""
+          },
+          {
+            "_id": "allow",
+            "severity": "1",
+            "outcome": "\"allow\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "response",
+      "type": "outputNode",
+      "name": "审批结论",
+      "position": {
+        "x": 3300,
+        "y": 200
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "request-identity",
+      "sourceId": "request",
+      "targetId": "identity",
+      "type": "edge"
+    },
+    {
+      "id": "identity-data",
+      "sourceId": "identity",
+      "targetId": "data",
+      "type": "edge"
+    },
+    {
+      "id": "data-destination",
+      "sourceId": "data",
+      "targetId": "destination",
+      "type": "edge"
+    },
+    {
+      "id": "destination-environment",
+      "sourceId": "destination",
+      "targetId": "environment",
+      "type": "edge"
+    },
+    {
+      "id": "environment-volume",
+      "sourceId": "environment",
+      "targetId": "volume",
+      "type": "edge"
+    },
+    {
+      "id": "volume-budget",
+      "sourceId": "volume",
+      "targetId": "budget",
+      "type": "edge"
+    },
+    {
+      "id": "budget-content",
+      "sourceId": "budget",
+      "targetId": "content",
+      "type": "edge"
+    },
+    {
+      "id": "content-context",
+      "sourceId": "content",
+      "targetId": "context",
+      "type": "edge"
+    },
+    {
+      "id": "context-severity",
+      "sourceId": "context",
+      "targetId": "severity",
+      "type": "edge"
+    },
+    {
+      "id": "severity-verdict",
+      "sourceId": "severity",
+      "targetId": "verdict",
+      "type": "edge"
+    },
+    {
+      "id": "verdict-response",
+      "sourceId": "verdict",
+      "targetId": "response",
+      "type": "edge"
+    }
+  ]
+}
