@@ -10,8 +10,8 @@ name: Release Please
 #
 # The GitHub Release is what triggers the matching publish workflow
 # (node.yaml / python.yaml / rust.yaml / uniffi.yaml) via its
-# `on: release` trigger. We use a PAT (not GITHUB_TOKEN) so the created
-# release is allowed to trigger those downstream workflows.
+# `on: release` trigger. We prefer a PAT so the created release can trigger
+# those downstream workflows, and fall back to GITHUB_TOKEN when PAT is unset.
 #
 # Tags (include-component-in-tag + tag-separator "-"):
 #   core   -> zen-engine-v<ver> (+ the 5 linked core crates), python -> python-v<ver>,
@@ -40,7 +40,7 @@ jobs:
       - uses: googleapis/release-please-action@v5
         id: release
         with:
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.PAT || github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
@@ -48,7 +48,7 @@ jobs:
         if: steps.release.outputs.pr
         with:
           ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.PAT || github.token }}
 
       - uses: dtolnay/rust-toolchain@stable
         if: steps.release.outputs.pr
