@@ -1,0 +1,494 @@
+{
+  "nodes": [
+    {
+      "id": "arrival",
+      "type": "inputNode",
+      "name": "Arrival manifest",
+      "position": {
+        "x": 0,
+        "y": 100
+      }
+    },
+    {
+      "id": "inspection",
+      "type": "decisionTableNode",
+      "name": "Safety inspection",
+      "position": {
+        "x": 300,
+        "y": 100
+      },
+      "content": {
+        "hitPolicy": "collect",
+        "inputs": [
+          {
+            "id": "cargo",
+            "field": "cargo",
+            "name": "cargo",
+            "type": "expression"
+          },
+          {
+            "id": "containment",
+            "field": "containment",
+            "name": "containment",
+            "type": "expression"
+          },
+          {
+            "id": "atmosphere",
+            "field": "atmosphere",
+            "name": "atmosphere",
+            "type": "expression"
+          },
+          {
+            "id": "suit",
+            "field": "suit",
+            "name": "suit",
+            "type": "expression"
+          },
+          {
+            "id": "telepathy",
+            "field": "telepathy",
+            "name": "telepathy",
+            "type": "expression"
+          },
+          {
+            "id": "consent",
+            "field": "consent",
+            "name": "consent",
+            "type": "expression"
+          },
+          {
+            "id": "translator",
+            "field": "translator",
+            "name": "translator",
+            "type": "expression"
+          },
+          {
+            "id": "days",
+            "field": "days",
+            "name": "days",
+            "type": "expression"
+          },
+          {
+            "id": "purpose",
+            "field": "purpose",
+            "name": "purpose",
+            "type": "expression"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "code",
+            "field": "code",
+            "name": "code",
+            "type": "expression"
+          },
+          {
+            "id": "severity",
+            "field": "severity",
+            "name": "severity",
+            "type": "expression"
+          },
+          {
+            "id": "en",
+            "field": "en",
+            "name": "en",
+            "type": "expression"
+          },
+          {
+            "id": "zh",
+            "field": "zh",
+            "name": "zh",
+            "type": "expression"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "singularity",
+            "cargo": "\"blackHole\"",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "",
+            "purpose": "",
+            "code": "\"singularity\"",
+            "severity": "\"critical\"",
+            "en": "\"A black hole cannot enter a planet. Even a very small one.\"",
+            "zh": "\"黑洞不能入境一颗行星。再小也不行。\""
+          },
+          {
+            "_id": "biosecurity",
+            "cargo": "\"spores\"",
+            "containment": "false",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "",
+            "purpose": "",
+            "code": "\"biosecurity\"",
+            "severity": "\"hold\"",
+            "en": "\"Unsealed spores need a biosecurity inspection.\"",
+            "zh": "\"未密封的孢子需要接受生物安全检查。\""
+          },
+          {
+            "_id": "atmosphere",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "!= \"oxygen\"",
+            "suit": "false",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "",
+            "purpose": "",
+            "code": "\"atmosphere\"",
+            "severity": "\"hold\"",
+            "en": "\"Earth air is incompatible. Bring a sealed atmosphere suit.\"",
+            "zh": "\"地球空气不适配。请穿上密闭环境服。\""
+          },
+          {
+            "_id": "telepathy",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "true",
+            "consent": "false",
+            "translator": "",
+            "days": "",
+            "purpose": "",
+            "code": "\"telepathy\"",
+            "severity": "\"review\"",
+            "en": "\"Mind reading requires consent. Earthlings have private thoughts.\"",
+            "zh": "\"读心需要征得同意。地球人的想法也有隐私。\""
+          },
+          {
+            "_id": "translation",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "false",
+            "days": "",
+            "purpose": "",
+            "code": "\"translation\"",
+            "severity": "\"review\"",
+            "en": "\"A working translator is required. Waving all six arms is not enough.\"",
+            "zh": "\"需要可用的翻译器。挥动六只手臂也不算。\""
+          },
+          {
+            "_id": "duration",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "> 30",
+            "purpose": "",
+            "code": "\"duration\"",
+            "severity": "\"review\"",
+            "en": "\"Visits over 30 Earth days need an extended-stay review.\"",
+            "zh": "\"超过 30 个地球日的访问需要延期审核。\""
+          },
+          {
+            "_id": "welcome",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "",
+            "purpose": "",
+            "code": "\"welcome\"",
+            "severity": "\"info\"",
+            "en": "\"Species and home planet do not determine admission.\"",
+            "zh": "\"物种和家乡星球不决定入境资格。\""
+          }
+        ],
+        "passThrough": true,
+        "outputPath": "checks"
+      }
+    },
+    {
+      "id": "admission",
+      "type": "decisionTableNode",
+      "name": "Admission policy",
+      "position": {
+        "x": 620,
+        "y": 100
+      },
+      "content": {
+        "hitPolicy": "first",
+        "inputs": [
+          {
+            "id": "cargo",
+            "field": "cargo",
+            "name": "cargo",
+            "type": "expression"
+          },
+          {
+            "id": "containment",
+            "field": "containment",
+            "name": "containment",
+            "type": "expression"
+          },
+          {
+            "id": "atmosphere",
+            "field": "atmosphere",
+            "name": "atmosphere",
+            "type": "expression"
+          },
+          {
+            "id": "suit",
+            "field": "suit",
+            "name": "suit",
+            "type": "expression"
+          },
+          {
+            "id": "telepathy",
+            "field": "telepathy",
+            "name": "telepathy",
+            "type": "expression"
+          },
+          {
+            "id": "consent",
+            "field": "consent",
+            "name": "consent",
+            "type": "expression"
+          },
+          {
+            "id": "translator",
+            "field": "translator",
+            "name": "translator",
+            "type": "expression"
+          },
+          {
+            "id": "days",
+            "field": "days",
+            "name": "days",
+            "type": "expression"
+          },
+          {
+            "id": "purpose",
+            "field": "purpose",
+            "name": "purpose",
+            "type": "expression"
+          }
+        ],
+        "outputs": [
+          {
+            "id": "code",
+            "field": "code",
+            "name": "code",
+            "type": "expression"
+          },
+          {
+            "id": "status",
+            "field": "status",
+            "name": "status",
+            "type": "expression"
+          },
+          {
+            "id": "en",
+            "field": "en",
+            "name": "en",
+            "type": "expression"
+          },
+          {
+            "id": "zh",
+            "field": "zh",
+            "name": "zh",
+            "type": "expression"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "no-black-holes",
+            "cargo": "\"blackHole\"",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "",
+            "purpose": "",
+            "code": "\"no-black-holes\"",
+            "status": "\"denied\"",
+            "en": "\"Please leave the singularity in orbital storage.\"",
+            "zh": "\"请把奇点留在轨道寄存处。\""
+          },
+          {
+            "_id": "seal-the-spores",
+            "cargo": "\"spores\"",
+            "containment": "false",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "",
+            "purpose": "",
+            "code": "\"seal-the-spores\"",
+            "status": "\"quarantine\"",
+            "en": "\"Seal the spores, then submit the passport again.\"",
+            "zh": "\"请密封孢子，然后重新提交护照。\""
+          },
+          {
+            "_id": "pack-a-suit",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "!= \"oxygen\"",
+            "suit": "false",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "",
+            "purpose": "",
+            "code": "\"pack-a-suit\"",
+            "status": "\"quarantine\"",
+            "en": "\"Put on an atmosphere suit, then try again.\"",
+            "zh": "\"请穿好密闭环境服，然后再试一次。\""
+          },
+          {
+            "_id": "respect-minds",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "true",
+            "consent": "false",
+            "translator": "",
+            "days": "",
+            "purpose": "",
+            "code": "\"respect-minds\"",
+            "status": "\"review\"",
+            "en": "\"Accept the no-mind-reading-without-consent pledge.\"",
+            "zh": "\"请接受“未经同意不得读心”的承诺。\""
+          },
+          {
+            "_id": "bring-translator",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "false",
+            "days": "",
+            "purpose": "",
+            "code": "\"bring-translator\"",
+            "status": "\"review\"",
+            "en": "\"Switch on your translator and resubmit.\"",
+            "zh": "\"请开启翻译器，然后重新提交。\""
+          },
+          {
+            "_id": "shorten-trip",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "> 30",
+            "purpose": "",
+            "code": "\"shorten-trip\"",
+            "status": "\"review\"",
+            "en": "\"Shorten the visit to 30 days or request an extended-stay review.\"",
+            "zh": "\"请把行程缩短至 30 天，或申请延期审核。\""
+          },
+          {
+            "_id": "diplomatic-welcome",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "",
+            "purpose": "\"diplomacy\"",
+            "code": "\"diplomatic-welcome\"",
+            "status": "\"diplomatic\"",
+            "en": "\"Welcome, envoy. The ceremonial biscuits are ready.\"",
+            "zh": "\"欢迎使节。礼宾饼干已经备好。\""
+          },
+          {
+            "_id": "cultural-exchange",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "",
+            "purpose": "\"culture\"",
+            "code": "\"cultural-exchange\"",
+            "status": "\"cultural\"",
+            "en": "\"Cultural exchange approved. Please explain your poetry gently.\"",
+            "zh": "\"文化交流获批。请温柔地解释你们的诗歌。\""
+          },
+          {
+            "_id": "tourist-welcome",
+            "cargo": "",
+            "containment": "",
+            "atmosphere": "",
+            "suit": "",
+            "telepathy": "",
+            "consent": "",
+            "translator": "",
+            "days": "",
+            "purpose": "",
+            "code": "\"tourist-welcome\"",
+            "status": "\"tourist\"",
+            "en": "\"Welcome to Earth. Please do not feed the satellites.\"",
+            "zh": "\"欢迎来到地球。请勿投喂卫星。\""
+          }
+        ],
+        "passThrough": true,
+        "outputPath": "visa"
+      }
+    },
+    {
+      "id": "verdict",
+      "type": "outputNode",
+      "name": "Stamped passport",
+      "position": {
+        "x": 940,
+        "y": 100
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "type": "edge",
+      "sourceId": "arrival",
+      "targetId": "inspection"
+    },
+    {
+      "id": "e1",
+      "type": "edge",
+      "sourceId": "inspection",
+      "targetId": "admission"
+    },
+    {
+      "id": "e2",
+      "type": "edge",
+      "sourceId": "admission",
+      "targetId": "verdict"
+    }
+  ]
+}

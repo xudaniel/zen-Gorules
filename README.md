@@ -1,5 +1,8 @@
 # ZEN Engine
 
+> **Play this fork’s demo: [Earth Entry — Alien Immigration Desk](https://xudaniel.github.io/zen-Gorules/)** · [中文](https://xudaniel.github.io/zen-Gorules/?lang=zh)
+> Inspect alien passports, explain each verdict, and try to get a poet’s pocket black hole through customs. Demo by Daniel Xu, powered by the upstream GoRules ZEN engine. [Source and details](examples/alien-immigration/README.md).
+
 **Business logic humans can read and machines can run.** One copy of your rules: the owner reads it, every system runs it.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)

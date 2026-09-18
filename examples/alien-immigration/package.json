@@ -1,0 +1,9 @@
+{
+  "name": "alien-immigration-desk",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"dev": "vite --host 127.0.0.1", "build": "vite build", "preview": "vite preview --host 127.0.0.1", "test": "node --test test/*.test.mjs"},
+  "dependencies": {"@gorules/zen-engine": "2.0.2", "@gorules/zen-engine-wasm32-wasi": "2.0.2"},
+  "devDependencies": {"vite": "7.1.7"}
+}
