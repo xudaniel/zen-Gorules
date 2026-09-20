@@ -3,6 +3,7 @@ title: 从 IBM ODM 到现代决策执行与 AI Agent 治理
 audience: 已经使用 IBM Operational Decision Manager 的企业客户
 language: zh-CN
 status: customer-ready draft
+research: Perplexity research completed 2026-09-20
 ---
 
 # 从 IBM ODM 到现代决策执行与 AI Agent 治理
@@ -16,6 +17,20 @@ IBM ODM 已经承载了贵公司的关键决策，我们不建议用一次高风
 第一阶段只选择一个边界清晰的场景，例如客服退款审批。我们会在不影响现有生产流程的情况下并行计算 ODM 与 GoRules 的结果，验证一致性、响应时间、发布效率和运维工作量。只有数据证明收益后，才迁移下一批规则。
 
 这不是一次“大爆炸式替换”，而是一条可衡量、可回退的现代化路径。
+
+## 先承认 IBM ODM 9.6 的现实
+
+这份提案不能建立在“ODM 已经过时”或“IBM 不支持 AI”之上。IBM ODM 9.6 于 2026 年 6 月发布，并新增了 MCP Server，可把 Decision Center REST API 暴露为 AI Agent 可使用的工具。ODM 同时继续支持 Decision Center、Rule Execution Server、HTDS、Java 嵌入、OpenShift、Kubernetes、WebSphere Liberty、JBoss EAP 和 z/OS。
+
+因此，更可信的销售论点是：
+
+- **IBM MCP 解决的是 AI 与现有 ODM 资产连接的问题。**
+- **GoRules 解决的是规则在哪里运行、如何跨语言嵌入、如何降低新应用对中心服务的依赖。**
+- **AgentGate 解决的是 AI Agent 在产生真实副作用前，如何获得与准确操作绑定的授权。**
+
+IBM ODM 继续作为成熟决策的系统记录；GoRules 与 AgentGate 为新的执行位置和风险控制提供补充能力。
+
+根据 IBM 公开授权资料，ODM/Cloud Pak 采用 Virtual Processor Core（VPC）度量，并通过 IBM License Service 或 ILMT 计量。IBM 没有公开每 VPC 的统一价格，因此客户成本分析必须使用客户自己的合同、部署规模和运维数据，不能引用未经验证的市场价格。
 
 ## 我们看到的现状
 
@@ -105,10 +120,11 @@ flowchart LR
 - 同一请求同时发送给 ODM 和 GoRules。
 - ODM 继续提供正式生产结果。
 - 自动比较两边输出，调查每一个差异。
+- 先运行零生产流量的 copy-only 模式，再根据双方约定的差异阈值决定是否进入 Canary。
 
 ### 第四阶段：受控切换
 
-- 只将约定范围的流量切换到 GoRules。
+- 按 5% → 25% → 50% 的阶梯，只将约定范围的流量切换到 GoRules；每一步都设置停止条件。
 - 保留快速回退到 ODM 的能力。
 - 根据成功指标决定扩大、暂停或终止迁移。
 
@@ -118,13 +134,29 @@ flowchart LR
 
 | 指标 | 当前基线 | 试点目标 | 验证方式 |
 |---|---:|---:|---|
-| ODM 与 GoRules 结果一致率 | 待测 | 约定值 | 历史样本与影子流量 |
+| ODM 与 GoRules 结果一致率 | 待测 | 影子阶段差异 ≤1%；正式切换阈值由双方确认 | 历史样本与影子流量 |
 | P95 决策响应时间 | 待测 | 约定值 | 相同运行环境压测 |
-| 一次规则变更的交付时间 | 待测 | 约定值 | 从需求确认到可发布版本 |
+| 一次规则变更的交付时间 | 待测 | 试点规则集缩短 ≥50%，或双方约定值 | 从需求确认到可发布版本 |
 | 回归测试覆盖率 | 待测 | 约定值 | 决策路径和边界测试 |
 | 生产回退时间 | 待测 | 约定值 | 演练并记录结果 |
 | 新场景基础设施成本 | 待测 | 约定值 | 使用客户自己的成本口径 |
 | 人工审批率 | 待测 | 约定值 | 自动允许、人工审批和拒绝的比例 |
+| 业务人员独立变更 | 待测 | 至少完成 1 次无需工程工单的端到端变更 | 需求、测试、审批和发布记录 |
+| 审计记录完整性 | 待测 | 每次评估包含 release ID、输入摘要和结果 | 日志抽样与回放 |
+
+这些目标是试点建议，不是行业保证值。平行运行资料给出的阈值可以用作谈判起点，但最终阈值应根据客户决策的风险等级、历史波动和监管要求确定。
+
+## 谁需要被说服
+
+| 角色 | 他们关心什么 | 建议话术 | 主要异议 |
+|---|---|---|---|
+| 决策平台负责人 | 规则目录、变更 SLA、团队连续性 | ODM 保留；先把一个新增或高摩擦规则集放入共存模式 | 是否要重新培训业务分析师 |
+| 企业架构师 | 标准、部署和长期可维护性 | 用可导出的 JSON/JDM、容器部署和嵌入 SDK 做实际评估 | JDM 不是 OMG DMN 标准 |
+| Platform / SRE | 运行稳定性和故障边界 | 同时验证 SDK 嵌入和 Agent 服务模式，ODM 保持回退路径 | 小厂商运行成熟度 |
+| CISO / GRC | 数据驻留、审计、职责分离 | 自托管、OIDC、审批、不可变 release 和完整执行证据 | 供应链与持续支持风险 |
+| 财务与采购 | 合同、VPC 授权和迁移成本 | 使用客户自己的 IBM 合同建立 TCO 基线，不引用市场猜测 | 迁移成本可能高于续约成本 |
+| CIO / CTO | 战略方向和项目风险 | 共存、影子运行、可回退；不要求一次性替换 | 大项目失败的职业风险 |
+| 业务分析师 | 每日规则编辑体验 | 让真实用户在试点中完成一次规则变更 | 失去 BAL 自然语言体验 |
 
 ## 风险控制
 
@@ -139,7 +171,19 @@ flowchart LR
 
 ### “我们已经为 IBM ODM 投入了很多，为什么还需要另一个平台？”
 
-这项计划不是否定现有投入。ODM 继续承担已经证明稳定的核心决策。GoRules 首先服务于 ODM 当前没有覆盖、或使用 ODM 成本较高的新场景。客户只在实际数据证明收益后扩大范围。
+这项计划不是否定现有投入。ODM 继续承担已经证明稳定的核心决策。GoRules 首先服务于新的非 Java 应用、嵌入式执行、边缘执行，以及需要独立扩容的决策。客户只在实际数据证明收益后扩大范围。
+
+### “IBM ODM 9.6 已经有 MCP，为什么还需要 AgentGate？”
+
+ODM MCP 让 AI Agent 可以使用 Decision Center 能力，这是有价值的进步。AgentGate 解决的是另一个问题：当 Agent 要退款、付款、发送消息或修改系统记录时，谁检查具体金额和目标、谁审批、授权能否重放、执行前状态是否改变，以及最终产生了什么外部副作用。两者可以组合使用。
+
+### “JDM 不是行业标准，会不会形成新的锁定？”
+
+JDM 不是 OMG DMN 标准，这一点需要明确说明。它的优势是规则保存为可读 JSON、可以进入 Git、可以使用 MIT License 的 ZEN Engine 在客户环境中执行。试点必须验证导出能力、源文件所有权和脱离商业平台后的运行方式，再由客户判断这种退出路径是否足够。
+
+### “GoRules 比 IBM 小，如果厂商消失怎么办？”
+
+ZEN Engine 使用 MIT License，可以由客户自行保存和运行；这降低了运行时消失风险。但开源许可证不等于开放治理，也不能替代商业支持。采购评估仍需检查源码托管、构建可重复性、依赖供应链、支持 SLA、灾难恢复和退出计划。
 
 ### “两套平台会不会增加复杂度？”
 
@@ -175,6 +219,28 @@ ODM 始终保留为正式决策路径。GoRules 可以从影子环境直接移�
 
 如果双方无法找到一个低风险、可测试且有明确收益假设的场景，就不启动试点。
 
+## 不应作出的承诺
+
+- 不承诺 GoRules 一定比 ODM 快；只承诺在客户环境中进行同条件测试。
+- 不承诺固定金额的 TCO 节省；IBM VPC 单价和实际运维成本取决于客户合同。
+- 不承诺全部 ODM 资产可以自动迁移；Task Flow、XOM、BAL/BRL/ARL 和专有集成都需要分析。
+- 不承诺在 4–6 周内停用 ODM；这个周期只用于验证一个有边界的规则集。
+- 不声称 GoRules 或 AgentGate 自动满足某项监管认证；它们提供可用于实现控制的技术能力。
+
+## 公开证据与证据缺口
+
+公开资料中最具体的 ODM 迁移案例，是 Berger-Levrault 发表的 IBM ODM → Drools 案例。它证明迁移在技术上可行，同时也显示出实际难点：ARL 规则提取、FRL Task Flow、UUID 引用和 POJO XOM 都需要专门处理。它迁移到的是 Drools，不是 GoRules，因此只能用来证明迁移方法与风险，不能作为 GoRules 客户案例。
+
+目前公开资料仍缺少：
+
+- IBM ODM 与 GoRules 的独立性能基准。
+- 使用同一客户环境计算的公开 TCO 对比。
+- 大型企业完整替换 ODM 为 GoRules 的具名案例。
+- 由 IBM 或 GoRules 官方共同认可的迁移方法。
+- 企业使用 AgentGate 形态控制真实 AI Agent 操作的第三方审计案例。
+
+这些缺口不应该用营销数字填补。试点的价值正是使用客户自己的规则、流量、合同和审计要求生成可信证据。
+
 ## 会前发现问题
 
 1. 当前哪些 ODM 决策变更最频繁？
@@ -189,10 +255,22 @@ ODM 始终保留为正式决策路径。GoRules 可以从影子环境直接移�
 ## 参考资料
 
 - [IBM Operational Decision Manager 产品说明](https://www.ibm.com/products/operational-decision-manager)
-- [IBM Operational Decision Manager 部署与计价模式](https://www.ibm.com/products/operational-decision-manager/pricing)
+- [IBM ODM 9.6 What's New](https://www.ibm.com/docs/en/odm/9.6.0?topic=notes-whats-new)
+- [IBM ODM 9.6 与 MCP Server](https://community.ibm.com/community/user/blogs/antony-viaud1/2026/06/25/ibm-odm-96)
+- [Cloud Pak 26.0 授权与 Entitlements](https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/26.0.0?topic=notes-licenses-entitlements)
+- [IBM 传统软件 VPC 授权说明](https://www.ibm.com/docs/en/cloud-paks/cp-biz-automation/26.0.0?topic=entitlements-traditional-license)
+- [IBM ODM 升级迁移路径](https://www.ibm.com/docs/en/odm/9.6.0?topic=migrating-upgrade-migration-path)
+- [Berger-Levrault：IBM ODM → Drools 案例](https://www.research-bl.com/model-based-analysis-and-comprehensive-brms-migration-ibm-odm-to-drools-case-study/)
+- [Microsoft Strangler Fig Pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/strangler-fig)
+- [Parallel-run Migration Playbook](https://www.easy.bi/blog/parallel-run-legacy-migration-playbook/)
 - [GoRules 开源 ZEN Engine](https://gorules.io/open-source)
-- [GoRules 平台概览](https://gorules.io/overview)
 - [GoRules 云端与自托管部署](https://gorules.io/cloud-native)
+- [GoRules Architecture](https://docs.gorules.io/developers/overview/architecture)
+- [GoRules Performance Claims](https://docs.gorules.io/developers/overview/performance)
+- [GoRules JDM](https://docs.gorules.io/developers/jdm/standard)
+- [OMG DMN 1.5](https://www.omg.org/spec/DMN/1.5/About-DMN)
+- [OpenAI Agent Guardrails and Approvals](https://developers.openai.com/api/docs/guides/agents/guardrails-approvals)
+- [Microsoft Agent Security with FIDES](https://learn.microsoft.com/en-us/agent-framework/agents/security)
 - [AgentGate 可运行演示](../examples/agent-approval/README.md)
 
 ## 使用说明
@@ -206,3 +284,5 @@ ODM 始终保留为正式决策路径。GoRules 可以从影子环境直接移�
 - 试点负责人、时间安排和成功标准
 
 本文没有假设现有客户已经承诺迁移，也没有承诺与全部 ODM 功能完全等价。
+
+本版本的新增研究仅通过 Perplexity 完成。Perplexity 返回的厂商资料、案例和第三方文章已经在正文中按“官方事实、厂商声明、推断、证据缺口”区分；面向具体客户使用前，仍应核对其 IBM 合同、ODM 版本和实际架构。
