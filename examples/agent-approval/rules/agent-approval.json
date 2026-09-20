@@ -367,11 +367,351 @@
       }
     },
     {
+      "id": "refund_eligibility",
+      "type": "decisionTableNode",
+      "name": "退款资格",
+      "position": {
+        "x": 1500,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.refund_eligibility.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.refund_eligibility.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.refund_eligibility.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.refund_eligibility.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "NOT_REFUND",
+            "condition": "request.action != \"issue_refund\"",
+            "severity": "1",
+            "code": "\"NOT_REFUND\"",
+            "reason": "\"本次操作不是退款\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "ORDER_NOT_FOUND",
+            "condition": "facts.order_exists == false",
+            "severity": "4",
+            "code": "\"ORDER_NOT_FOUND\"",
+            "reason": "\"支付沙箱中找不到订单\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "REFUND_AMOUNT",
+            "condition": "request.cost <= 0",
+            "severity": "4",
+            "code": "\"REFUND_AMOUNT\"",
+            "reason": "\"退款金额必须大于零\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "REFUND_BALANCE",
+            "condition": "request.cost > facts.refundable_amount",
+            "severity": "4",
+            "code": "\"REFUND_BALANCE\"",
+            "reason": "\"退款金额超过订单剩余可退金额\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "REFUND_WINDOW",
+            "condition": "facts.order_age_days > 60",
+            "severity": "4",
+            "code": "\"REFUND_WINDOW\"",
+            "reason": "\"订单已超过六十天退款期限\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "REFUND_CAP",
+            "condition": "request.cost > 500",
+            "severity": "4",
+            "code": "\"REFUND_CAP\"",
+            "reason": "\"单次退款超过五百美元上限\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "REFUND_ELIGIBLE",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"REFUND_ELIGIBLE\"",
+            "reason": "\"订单与退款金额符合基本条件\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "refund_operations",
+      "type": "decisionTableNode",
+      "name": "退款运营规则",
+      "position": {
+        "x": 1800,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.refund_operations.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.refund_operations.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.refund_operations.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.refund_operations.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "NOT_REFUND",
+            "condition": "request.action != \"issue_refund\"",
+            "severity": "1",
+            "code": "\"NOT_REFUND\"",
+            "reason": "\"本次操作不是退款\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "REFUND_OWNER",
+            "condition": "request.cost > 50",
+            "severity": "3",
+            "code": "\"REFUND_OWNER\"",
+            "reason": "\"退款超过五十美元，需要客服主管批准\"",
+            "reviewer": "\"support\""
+          },
+          {
+            "_id": "REFUND_AGE_REVIEW",
+            "condition": "facts.order_age_days > 30",
+            "severity": "3",
+            "code": "\"REFUND_AGE_REVIEW\"",
+            "reason": "\"订单超过三十天，需要客服主管复核\"",
+            "reviewer": "\"support\""
+          },
+          {
+            "_id": "REFUND_OPS_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"REFUND_OPS_OK\"",
+            "reason": "\"退款在客服自动处理范围内\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "refund_fraud",
+      "type": "decisionTableNode",
+      "name": "退款风险",
+      "position": {
+        "x": 2100,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.refund_fraud.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.refund_fraud.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.refund_fraud.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.refund_fraud.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "NOT_REFUND",
+            "condition": "request.action != \"issue_refund\"",
+            "severity": "1",
+            "code": "\"NOT_REFUND\"",
+            "reason": "\"本次操作不是退款\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "REFUND_RISK",
+            "condition": "facts.refund_risk_flag",
+            "severity": "3",
+            "code": "\"REFUND_RISK\"",
+            "reason": "\"订单命中支付沙箱风险标记，需要安全复核\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "REFUND_HISTORY",
+            "condition": "facts.prior_refunds >= 2",
+            "severity": "3",
+            "code": "\"REFUND_HISTORY\"",
+            "reason": "\"客户历史退款次数较多，需要安全复核\"",
+            "reviewer": "\"security\""
+          },
+          {
+            "_id": "REFUND_RISK_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"REFUND_RISK_OK\"",
+            "reason": "\"退款历史与风险标记正常\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "refund_finance",
+      "type": "decisionTableNode",
+      "name": "退款财务规则",
+      "position": {
+        "x": 2400,
+        "y": 200
+      },
+      "content": {
+        "hitPolicy": "first",
+        "passThrough": true,
+        "inputs": [
+          {
+            "id": "condition",
+            "name": "判断条件",
+            "type": "expression",
+            "field": ""
+          }
+        ],
+        "outputs": [
+          {
+            "id": "severity",
+            "name": "severity",
+            "type": "expression",
+            "field": "checks.refund_finance.severity"
+          },
+          {
+            "id": "code",
+            "name": "code",
+            "type": "expression",
+            "field": "checks.refund_finance.code"
+          },
+          {
+            "id": "reason",
+            "name": "reason",
+            "type": "expression",
+            "field": "checks.refund_finance.reason"
+          },
+          {
+            "id": "reviewer",
+            "name": "reviewer",
+            "type": "expression",
+            "field": "checks.refund_finance.reviewer"
+          }
+        ],
+        "rules": [
+          {
+            "_id": "NOT_REFUND",
+            "condition": "request.action != \"issue_refund\"",
+            "severity": "1",
+            "code": "\"NOT_REFUND\"",
+            "reason": "\"本次操作不是退款\"",
+            "reviewer": "\"\""
+          },
+          {
+            "_id": "REFUND_FINANCE",
+            "condition": "request.cost > 200",
+            "severity": "3",
+            "code": "\"REFUND_FINANCE\"",
+            "reason": "\"退款超过二百美元，需要财务批准\"",
+            "reviewer": "\"finance\""
+          },
+          {
+            "_id": "REFUND_FINANCE_OK",
+            "condition": "true",
+            "severity": "1",
+            "code": "\"REFUND_FINANCE_OK\"",
+            "reason": "\"退款金额无需财务复核\"",
+            "reviewer": "\"\""
+          }
+        ]
+      }
+    },
+    {
       "id": "volume",
       "type": "decisionTableNode",
       "name": "操作规模",
       "position": {
-        "x": 1500,
+        "x": 2700,
         "y": 200
       },
       "content": {
@@ -460,7 +800,7 @@
       "type": "decisionTableNode",
       "name": "成本与额度",
       "position": {
-        "x": 1800,
+        "x": 3000,
         "y": 200
       },
       "content": {
@@ -503,7 +843,7 @@
         "rules": [
           {
             "_id": "SINGLE_BUDGET",
-            "condition": "request.cost > 500",
+            "condition": "request.action != \"issue_refund\" and request.cost > 500",
             "severity": "4",
             "code": "\"SINGLE_BUDGET\"",
             "reason": "\"单次预计成本超过 500 演示点数\"",
@@ -511,7 +851,7 @@
           },
           {
             "_id": "TOTAL_BUDGET",
-            "condition": "facts.cost_hour + request.cost > 1000",
+            "condition": "request.action != \"issue_refund\" and facts.cost_hour + request.cost > 1000",
             "severity": "4",
             "code": "\"TOTAL_BUDGET\"",
             "reason": "\"近一小时累计成本将超过 1,000 演示点数\"",
@@ -519,7 +859,7 @@
           },
           {
             "_id": "FINANCE_REVIEW",
-            "condition": "request.cost > 100",
+            "condition": "request.action != \"issue_refund\" and request.cost > 100",
             "severity": "3",
             "code": "\"FINANCE_REVIEW\"",
             "reason": "\"预计成本超过 100 点，需要财务批准\"",
@@ -527,7 +867,7 @@
           },
           {
             "_id": "BUDGET_OK",
-            "condition": "request.cost > 0",
+            "condition": "request.action != \"issue_refund\" and request.cost > 0",
             "severity": "1",
             "code": "\"BUDGET_OK\"",
             "reason": "\"预计成本在预算范围内\"",
@@ -549,7 +889,7 @@
       "type": "decisionTableNode",
       "name": "内容与指令",
       "position": {
-        "x": 2100,
+        "x": 3300,
         "y": 200
       },
       "content": {
@@ -638,7 +978,7 @@
       "type": "decisionTableNode",
       "name": "业务理由",
       "position": {
-        "x": 2400,
+        "x": 3600,
         "y": 200
       },
       "content": {
@@ -719,7 +1059,7 @@
       "type": "expressionNode",
       "name": "合并风险等级",
       "position": {
-        "x": 2700,
+        "x": 3900,
         "y": 200
       },
       "content": {
@@ -728,7 +1068,7 @@
           {
             "id": "maximum",
             "key": "severity",
-            "value": "max([checks.identity.severity, checks.data.severity, checks.destination.severity, checks.environment.severity, checks.volume.severity, checks.budget.severity, checks.content.severity, checks.context.severity])"
+            "value": "max([checks.identity.severity, checks.data.severity, checks.destination.severity, checks.environment.severity, checks.refund_eligibility.severity, checks.refund_operations.severity, checks.refund_fraud.severity, checks.refund_finance.severity, checks.volume.severity, checks.budget.severity, checks.content.severity, checks.context.severity])"
           }
         ]
       }
@@ -738,7 +1078,7 @@
       "type": "decisionTableNode",
       "name": "最终决策",
       "position": {
-        "x": 3000,
+        "x": 4200,
         "y": 200
       },
       "content": {
@@ -787,7 +1127,7 @@
       "type": "outputNode",
       "name": "审批结论",
       "position": {
-        "x": 3300,
+        "x": 4500,
         "y": 200
       }
     }
@@ -818,8 +1158,32 @@
       "type": "edge"
     },
     {
-      "id": "environment-volume",
+      "id": "environment-refund_eligibility",
       "sourceId": "environment",
+      "targetId": "refund_eligibility",
+      "type": "edge"
+    },
+    {
+      "id": "refund_eligibility-refund_operations",
+      "sourceId": "refund_eligibility",
+      "targetId": "refund_operations",
+      "type": "edge"
+    },
+    {
+      "id": "refund_operations-refund_fraud",
+      "sourceId": "refund_operations",
+      "targetId": "refund_fraud",
+      "type": "edge"
+    },
+    {
+      "id": "refund_fraud-refund_finance",
+      "sourceId": "refund_fraud",
+      "targetId": "refund_finance",
+      "type": "edge"
+    },
+    {
+      "id": "refund_finance-volume",
+      "sourceId": "refund_finance",
       "targetId": "volume",
       "type": "edge"
     },

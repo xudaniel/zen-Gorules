@@ -4,9 +4,9 @@
 
 An interactive GoRules demo that answers: **May an AI agent execute its next action?** It checks identity, permissions, data, destination, environment, volume, budget, content, and business context, then allows, redacts, requests human review, or blocks the action.
 
-**8 check modules · 43 decision rules · 12 scenarios · 184 automated tests.**
+**12 check modules · 61 decision rules · 18 scenarios · 206 automated tests.**
 
-Decisions run through the real `zen-engine==2.0.2`. No AI API key is required. Preset scenarios and editable forms simulate agent requests; all email, API, read, write, and delete operations return simulated receipts without touching real systems.
+Decisions run through the real `zen-engine==2.0.2`. No AI API key is required. Preset scenarios and editable forms simulate agent requests. Email, API, read, write, and delete operations return simulated receipts. Refunds update a persistent local payment sandbox with orders, refundable balances, and a refund ledger; no real payment provider is called.
 
 ## Start the demo
 
@@ -33,10 +33,20 @@ The server listens only on `127.0.0.1`. Local records are stored in `.demo-data/
 
 ## Five-minute walkthrough
 
+### 0. Run the startup wedge: controlled refunds
+
+1. Choose **Automatic small refund**, evaluate it, and execute the issued grant.
+2. Open **Refund sandbox**. `ORD-1001` now has a lower refundable balance and the ledger contains one refund.
+3. Choose **Refund needs lead approval**. A support lead must approve before execution.
+4. Choose **High-value refund co-approval**. Both the support lead and finance must approve.
+5. Try **Review a high-risk refund**, **Exceeds refundable balance**, and **Order outside refund window** to see risk review and hard denials.
+
+The order catalog is trusted server-side data. The browser cannot supply order age, refund history, risk flags, or refundable balance. Execution rechecks the current balance inside the same database transaction that consumes the single-use grant and writes the refund.
+
 ### 1. Allow an action, then block a replay
 
 1. Choose **Read public information**.
-2. Click **Evaluate action** and inspect all eight checks.
+2. Click **Evaluate action** and inspect all twelve checks.
 3. Click **Simulate execution**.
 4. Click **Try replay · should be blocked**. The single-use grant cannot execute twice.
 5. Choose **Block secret leakage** and evaluate. The fake secret marker overrides the declared public classification and blocks the outbound action.
@@ -89,6 +99,10 @@ flowchart LR
 | Data classification | Upgrade classification from content; block secret egress; redact customer contacts |
 | Destination trust | Internal `company.example`, trusted `partner.example`, unknown destinations, blocked `blocked.example` |
 | Environment | Production writes need owner approval; production APIs need security approval; production deletion is denied |
+| Refund eligibility | Order existence, refundable balance, 60-day window, and USD 500 hard cap |
+| Refund operations | Support lead approval above USD 50 or after 30 days |
+| Refund risk | Security review for risk flags or repeated refunds |
+| Refund finance | Finance approval above USD 200 |
 | Action volume | Above 1,000 records is denied; 10 recent executions require review; 20 reach the hourly cap |
 | Cost & budget | Above 100 credits requires finance; above 500 per action or 1,000 per hour is denied |
 | Content & instructions | Payload size, empty emails, demo secret markers, limited suspicious phrases |
@@ -100,7 +114,7 @@ A grant binds every normalized request field and the policy hash, including rule
 
 ## Open the native GoRules decision graph
 
-Import [rules/agent-approval.en.json](rules/agent-approval.en.json) into <https://editor.gorules.io/>. It contains 12 nodes: input, eight checks, risk aggregation, final decision, and output.
+Import [rules/agent-approval.en.json](rules/agent-approval.en.json) into <https://editor.gorules.io/>. It contains 16 nodes: input, twelve checks, risk aggregation, final decision, and output.
 
 Paste one of these complete samples into **Simulator → Request**, then click **Run**:
 
@@ -118,7 +132,7 @@ From this directory with the environment activated:
 python -m unittest discover -s tests -v
 ```
 
-The 184 tests cover scenario outcomes under both policy versions, permissions, limits, malformed inputs, request binding, co-approval, expiry, policy changes, concurrent execution, audit integrity, HTTP origin checks, and English localization. English scenario and graph tests run the real GoRules engine.
+The 206 tests cover scenario outcomes under both policy versions, refund eligibility and reviewer roles, payment-sandbox persistence, balance rechecks, permissions, limits, malformed inputs, request binding, co-approval, expiry, policy changes, concurrent execution, audit integrity, HTTP origin checks, and English localization. English scenario and graph tests run the real GoRules engine.
 
 Chinese and English share the same backend and UI behavior. English copy lives in [locales/en.json](locales/en.json). English assets, graphs, samples, and the discount fixture are generated from their shared sources:
 
@@ -132,6 +146,6 @@ Edit `static/app.js` and `static/index.html`, then regenerate; do not edit `app.
 
 ## Demo boundaries
 
-This is a local single-operator demo, not a production security gateway. It has no real LLM, enterprise login, independent reviewer authentication, or external tool connections. Switching reviewer personas demonstrates role checks, not secure identity.
+This is a local single-operator demo, not a production security gateway. It has no real LLM, enterprise login, independent reviewer authentication, or external payment connection. Switching reviewer personas demonstrates role checks, not secure identity. The payment sandbox proves stateful enforcement and ledger behavior, but production use still requires an authenticated reviewer system and a payment-provider adapter.
 
 Content detection is limited to email addresses, Chinese mobile numbers, `sk_demo_` / `API_KEY=` / `password=` markers, and a small set of suspicious phrases. The audit hash chain detects accidental modification but has no external trust anchor. Rules load on server startup; restart after changing them.

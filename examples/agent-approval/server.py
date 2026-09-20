@@ -98,7 +98,7 @@ if __name__=='__main__':
     service=ApprovalService(args.db)
     args.db.chmod(0o600)
     server=create_server(service,args.port)
-    print(f'AgentGate demo: http://127.0.0.1:{server.server_port} (simulated tools only)',flush=True)
+    print(f'AgentGate demo: http://127.0.0.1:{server.server_port} (local refund sandbox; other tools simulated)',flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

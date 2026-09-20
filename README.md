@@ -45,7 +45,7 @@ Version 2.0 is the first stable release of the new engine line:
 
 ### Interactive demos in this fork
 
-- [AgentGate — AI action approvals](examples/agent-approval/README.en.md) ([中文](examples/agent-approval/README.md)): a local English/Chinese dashboard with eight GoRules checks, human co-approval, single-use grants, redaction, policy versions, audit history, and simulated tool execution.
+- [AgentGate — AI action approvals](examples/agent-approval/README.en.md) ([中文](examples/agent-approval/README.md)): a bilingual approval gateway with twelve GoRules checks, human co-approval, single-use grants, redaction, audit history, and a stateful local refund sandbox.
 - [Discount approval demo](examples/discount-approval/README.en.md) ([中文](examples/discount-approval/README.md)): an introductory decision table with English/Chinese outputs and boundary tests.
 
 

@@ -13,7 +13,7 @@ def urlopen(request):
     return build_opener(ProxyHandler({})).open(request, timeout=5)
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-from approval import ApprovalService, ApprovalError, BASE, SCENARIOS, AGENTS, destination
+from approval import ApprovalService, ApprovalError, BASE, SCENARIOS, AGENTS, ACTIONS, destination
 from build_rules import build
 from server import create_server
 
@@ -32,7 +32,7 @@ class ApprovalTests(unittest.TestCase):
         r=self.s.evaluate(request)
         self.assertNotEqual(r['state'],'blocked')
         for role in r['decision']['required_roles']:
-            user={'owner':'lin','security':'chen','finance':'zhou'}[role]
+            user={'support':'mei','owner':'lin','security':'chen','finance':'zhou'}[role]
             r=self.s.review(r['id'],user,'已检查演示业务用途，同意本次操作。')
         self.assertEqual(r['state'],'authorized')
         return r
@@ -224,10 +224,79 @@ class ApprovalTests(unittest.TestCase):
         path=Path(__file__).resolve().parents[1]/'rules'/'agent-approval.json'
         self.assertEqual(json.loads(path.read_text()),build())
 
-    def test_all_eight_checks_preserved_on_denial(self):
+    def test_all_twelve_checks_preserved_on_denial(self):
         r=self.s.evaluate(SCENARIOS[4]['request'])
-        self.assertEqual(len(r['decision']['checks']),8)
+        self.assertEqual(len(r['decision']['checks']),12)
         self.assertTrue(any(c['severity']==4 for c in r['decision']['checks']))
+
+    def test_refund_executes_against_local_payment_sandbox(self):
+        request=SCENARIOS[12]['request']
+        evaluated=self.s.evaluate(request)
+        self.assertEqual(evaluated['state'],'authorized')
+        result=self.s.execute(evaluated['id'],evaluated['grant_token'],request)
+        receipt=result['receipt']
+        self.assertFalse(receipt['simulated'])
+        self.assertTrue(receipt['sandboxed'])
+        self.assertEqual(receipt['provider'],'local_payment_sandbox')
+        self.assertEqual(receipt['remaining_refundable'],85)
+        state=self.s.state()
+        order=next(o for o in state['sandbox_orders'] if o['id']=='ORD-1001')
+        self.assertEqual(order['refundable'],85)
+        self.assertEqual(order['prior_refunds'],1)
+        self.assertEqual(state['sandbox_refunds'][0]['request_id'],evaluated['id'])
+        self.assertTrue(state['audit_valid'])
+
+    def test_refund_review_roles_follow_amount_and_risk(self):
+        cases={'refund-lead':['support'],'refund-finance':['finance','support'],'refund-risk':['security','support']}
+        for key,roles in cases.items():
+            with self.subTest(key=key):
+                request=next(s['request'] for s in SCENARIOS if s['id']==key)
+                self.assertEqual(self.s.evaluate(request)['decision']['required_roles'],roles)
+
+    def test_refund_hard_limits_cannot_be_approved(self):
+        for key,code in [('refund-over','REFUND_BALANCE'),('refund-old','REFUND_WINDOW')]:
+            with self.subTest(key=key):
+                request=next(s['request'] for s in SCENARIOS if s['id']==key)
+                evaluated=self.s.evaluate(request)
+                self.assertEqual(evaluated['state'],'blocked')
+                self.assertIn(code,[c['code'] for c in evaluated['decision']['checks']])
+                self.fail_code('NOT_PENDING',lambda:self.s.review(evaluated['id'],'lin','不能覆盖退款硬性限制。'))
+
+    def test_unknown_order_is_denied(self):
+        request=dict(SCENARIOS[12]['request'],target='ORD-MISSING')
+        evaluated=self.s.evaluate(request)
+        self.assertEqual(evaluated['decision']['outcome'],'deny')
+        self.assertIn('ORDER_NOT_FOUND',[c['code'] for c in evaluated['decision']['checks']])
+
+    def test_refund_balance_is_rechecked_before_execution(self):
+        request=dict(SCENARIOS[12]['request'],cost=80)
+        first=self.authorize(request)
+        second=self.authorize(request)
+        self.s.execute(first['id'],first['grant_token'],request)
+        self.fail_code('RISK_CHANGED',lambda:self.s.execute(second['id'],second['grant_token'],request))
+        self.assertEqual(len(self.s.state()['sandbox_refunds']),1)
+
+    def test_refund_grant_is_bound_to_order_and_amount(self):
+        request=SCENARIOS[12]['request']
+        evaluated=self.s.evaluate(request)
+        self.fail_code('CONTENT_CHANGED',lambda:self.s.execute(evaluated['id'],evaluated['grant_token'],dict(request,cost=36)))
+        self.assertEqual(len(self.s.state()['sandbox_refunds']),0)
+
+    def test_refund_ledger_persists(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path=Path(directory)/'refund.sqlite'
+            first=ApprovalService(path,clock=lambda:self.now)
+            request=SCENARIOS[12]['request']
+            evaluated=first.evaluate(request)
+            first.execute(evaluated['id'],evaluated['grant_token'],request)
+            first.close()
+            second=ApprovalService(path,clock=lambda:self.now)
+            try:
+                self.assertEqual(len(second.state()['sandbox_refunds']),1)
+                order=next(o for o in second.state()['sandbox_orders'] if o['id']=='ORD-1001')
+                self.assertEqual(order['refundable'],85)
+            finally:
+                second.close()
 
     def test_fingerprint_deterministic(self):
         a=self.s.evaluate(BASE);b=self.s.evaluate(dict(reversed(list(BASE.items()))))
@@ -261,9 +330,9 @@ for version in ['v1','v2']:
         add_test('scenario_'+version+'_'+item['id'].replace('-','_'),case)
 
 for agent in AGENTS:
-    for action in ['read_file','send_email','update_record','delete_records','http_request']:
+    for action in ACTIONS:
         def case(self,agent=agent,action=action):
-            target='a@company.example' if action=='send_email' else 'https://api.company.example/x' if action=='http_request' else BASE['target']
+            target='a@company.example' if action=='send_email' else 'https://api.company.example/x' if action=='http_request' else 'ORD-1001' if action=='issue_refund' else BASE['target']
             c=self.check(self.request(agent=agent,action=action,target=target),'identity')
             expected=4 if not AGENTS[agent]['active'] or action not in AGENTS[agent]['actions'] else 3 if action=='delete_records' else 1
             self.assertEqual(c['severity'],expected)
@@ -359,7 +428,7 @@ class HTTPTests(unittest.TestCase):
 
     def test_rule_download(self):
         with urlopen(self.url+'/rules/agent-approval.json') as r: graph=json.load(r)
-        self.assertEqual(len(graph['nodes']),12)
+        self.assertEqual(len(graph['nodes']),16)
 
     def test_english_routes_and_chinese_switch(self):
         for path, marker in [('/en/', b'Rules govern the next AI action.'), ('/', b'href="/en/"'), ('/app.en.js', b'window.agentGateTranslate')]:
@@ -369,7 +438,7 @@ class HTTPTests(unittest.TestCase):
                     self.assertIn(marker, response.read())
         with urlopen(self.url+'/rules/agent-approval.en.json') as response:
             graph = json.load(response)
-        self.assertEqual(len(graph['nodes']), 12)
+        self.assertEqual(len(graph['nodes']), 16)
         self.assertEqual(graph['nodes'][0]['name'], 'Action request')
 
     def test_invalid_body(self):

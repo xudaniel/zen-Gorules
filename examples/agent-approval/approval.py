@@ -15,19 +15,20 @@ import zen
 
 ROOT = Path(__file__).resolve().parent
 AGENTS = {
-    'operations': {'name': 'Atlas · 运营助手', 'active': True, 'actions': ['read_file', 'update_record', 'send_email', 'delete_records', 'http_request']},
+    'operations': {'name': 'Atlas · 运营助手', 'active': True, 'actions': ['read_file', 'update_record', 'send_email', 'delete_records', 'http_request', 'issue_refund']},
     'research': {'name': 'Iris · 研究助手', 'active': True, 'actions': ['read_file', 'http_request']},
     'retired': {'name': 'Echo · 已停用', 'active': False, 'actions': []},
 }
 REVIEWERS = {
+    'mei': {'name': '梅安', 'role': 'support', 'label': '客服主管'},
     'lin': {'name': '林悦', 'role': 'owner', 'label': '业务负责人'},
     'chen': {'name': '陈知', 'role': 'security', 'label': '安全审核员'},
     'zhou': {'name': '周宁', 'role': 'finance', 'label': '财务审核员'},
     'requester': {'name': '申请人', 'role': 'requester', 'label': '无审批权限'},
 }
 VERSIONS = {'v1': {'name': '标准策略', 'review_record_limit': 100}, 'v2': {'name': '谨慎策略', 'review_record_limit': 50}}
-LABELS = {'identity': '身份与权限', 'data': '数据分级', 'destination': '目标可信度', 'environment': '运行环境', 'volume': '操作规模', 'budget': '成本与额度', 'content': '内容与指令', 'context': '业务理由'}
-ACTIONS = ['read_file', 'update_record', 'send_email', 'delete_records', 'http_request']
+LABELS = {'identity': '身份与权限', 'data': '数据分级', 'destination': '目标可信度', 'environment': '运行环境', 'refund_eligibility': '退款资格', 'refund_operations': '退款运营规则', 'refund_fraud': '退款风险', 'refund_finance': '退款财务规则', 'volume': '操作规模', 'budget': '成本与额度', 'content': '内容与指令', 'context': '业务理由'}
+ACTIONS = ['read_file', 'update_record', 'send_email', 'delete_records', 'http_request', 'issue_refund']
 BASE = {'agent': 'operations', 'environment': 'sandbox', 'action': 'read_file', 'data_class': 'public', 'target': 'docs.company.example', 'records': 1, 'cost': 0, 'payload': '读取公开产品介绍，生成本周摘要。', 'purpose': '准备本周产品说明材料', 'ticket': ''}
 
 def scenario(key, title, caption, expected, **changes):
@@ -46,6 +47,21 @@ SCENARIOS = [
     scenario('version','策略版本对比','80 条记录：标准策略允许，谨慎策略复核','allow',action='update_record',records=80),
     scenario('budget','超出单次预算','预计成本超限，人工也不能强行放行','deny',cost=550),
     scenario('blocked','禁止目标拦截','收件人域名在演示禁止名单内','deny',action='send_email',target='receiver@blocked.example'),
+    scenario('refund-auto','小额退款自动执行','订单有效且金额较低，无需人工等待','allow',action='issue_refund',environment='production',data_class='customer',target='ORD-1001',cost=35,payload='客户反馈商品包装破损，申请部分退款。',purpose='处理已核实的售后退款',ticket='SUP-4101'),
+    scenario('refund-lead','退款需要主管确认','退款超过 50 美元，需要客服主管批准','review',action='issue_refund',environment='production',data_class='customer',target='ORD-1002',cost=120,payload='客户退回未拆封商品，仓库已签收。',purpose='完成退货订单退款',ticket='SUP-4102'),
+    scenario('refund-finance','高额退款双人会签','客服主管与财务分别批准后才能执行','review',action='issue_refund',environment='production',data_class='customer',target='ORD-1003',cost=350,payload='企业客户服务中断，按合同退还部分费用。',purpose='执行合同服务补偿',ticket='SUP-4103'),
+    scenario('refund-risk','高风险退款人工复核','历史退款较多，需要主管与安全人员会签','review',action='issue_refund',environment='production',data_class='customer',target='ORD-1004',cost=85,payload='客户再次申请部分退款，需要核对历史记录。',purpose='复核重复退款申请',ticket='SUP-4104'),
+    scenario('refund-over','超过可退余额','申请金额超过订单剩余可退金额','deny',action='issue_refund',environment='production',data_class='customer',target='ORD-1005',cost=50,payload='申请退还订单剩余金额之外的费用。',purpose='处理客户退款申请',ticket='SUP-4105'),
+    scenario('refund-old','订单超出退款期限','订单已超过六十天，策略直接拦截','deny',action='issue_refund',environment='production',data_class='customer',target='ORD-1006',cost=100,payload='客户申请对历史订单退款。',purpose='处理历史订单退款',ticket='SUP-4106'),
+]
+
+SANDBOX_ORDERS = [
+    ('ORD-1001', 120.0, 'USD', 5, 'standard', 0, 0, 0.0),
+    ('ORD-1002', 300.0, 'USD', 10, 'gold', 0, 0, 0.0),
+    ('ORD-1003', 900.0, 'USD', 12, 'enterprise', 0, 0, 0.0),
+    ('ORD-1004', 250.0, 'USD', 15, 'standard', 2, 1, 40.0),
+    ('ORD-1005', 80.0, 'USD', 20, 'standard', 1, 0, 60.0),
+    ('ORD-1006', 600.0, 'USD', 75, 'gold', 0, 0, 0.0),
 ]
 
 class ApprovalError(Exception):
@@ -98,6 +114,8 @@ def normalize(data):
 
 
 def destination(target):
+    if target.startswith('ORD-'):
+        return 'internal'
     if '://' in target:
         host=(urlsplit(target).hostname or '').lower()
     else:
@@ -128,7 +146,16 @@ class ApprovalService:
         CREATE TABLE IF NOT EXISTS audit (
           seq INTEGER PRIMARY KEY AUTOINCREMENT, created REAL, kind TEXT, request_id TEXT,
           detail TEXT, previous_hash TEXT, hash TEXT);
+        CREATE TABLE IF NOT EXISTS sandbox_orders (
+          id TEXT PRIMARY KEY, total REAL NOT NULL, currency TEXT NOT NULL,
+          age_days INTEGER NOT NULL, customer_tier TEXT NOT NULL,
+          prior_refunds INTEGER NOT NULL, risk_flag INTEGER NOT NULL,
+          refunded REAL NOT NULL);
+        CREATE TABLE IF NOT EXISTS sandbox_refunds (
+          id TEXT PRIMARY KEY, request_id TEXT UNIQUE NOT NULL, order_id TEXT NOT NULL,
+          amount REAL NOT NULL, currency TEXT NOT NULL, created REAL NOT NULL);
         ''')
+        self.db.executemany('INSERT OR IGNORE INTO sandbox_orders VALUES(?,?,?,?,?,?,?,?)', SANDBOX_ORDERS)
         self.db.commit()
         self.rule_content=(ROOT/'rules'/'agent-approval.json').read_text(encoding='utf-8')
         self.rule_hash=hashlib.sha256(self.rule_content.encode()).hexdigest()
@@ -160,7 +187,8 @@ class ApprovalService:
             effective='customer'
         if SECRET.search(payload):
             effective='secret'
-        facts={'agent_active':AGENTS[request['agent']]['active'],'scope_allowed':request['action'] in AGENTS[request['agent']]['actions'], 'classification':effective,'destination':target,'external':target!='internal', 'redactable':pii,'executions_hour':stats[0],'cost_hour':stats[1], 'review_record_limit':policy['review_record_limit'],'payload_bytes':len(payload.encode()), 'injection_signal':bool(INJECTION.search(payload)), 'secret_signal':bool(SECRET.search(payload)), 'empty_payload':not payload, 'purpose_length':len(request['purpose']), 'ticket_missing':not request['ticket']}
+        order=self.db.execute('SELECT * FROM sandbox_orders WHERE id=?',(request['target'],)).fetchone() if request['action']=='issue_refund' else None
+        facts={'agent_active':AGENTS[request['agent']]['active'],'scope_allowed':request['action'] in AGENTS[request['agent']]['actions'], 'classification':effective,'destination':target,'external':target!='internal', 'redactable':pii,'executions_hour':stats[0],'cost_hour':stats[1], 'review_record_limit':policy['review_record_limit'],'payload_bytes':len(payload.encode()), 'injection_signal':bool(INJECTION.search(payload)), 'secret_signal':bool(SECRET.search(payload)), 'empty_payload':not payload, 'purpose_length':len(request['purpose']), 'ticket_missing':not request['ticket'], 'order_exists':bool(order), 'refundable_amount':round(order['total']-order['refunded'],2) if order else 0, 'order_age_days':order['age_days'] if order else 0, 'prior_refunds':order['prior_refunds'] if order else 0, 'refund_risk_flag':bool(order['risk_flag']) if order else False, 'customer_tier':order['customer_tier'] if order else ''}
         result=self.decision.evaluate({'request':request,'facts':facts},{'trace':True})
         output=result['result']
         checks=[dict(key=key,label=LABELS[key],**output['checks'][key]) for key in LABELS]
@@ -277,11 +305,20 @@ class ApprovalService:
                     effective=original
                     if current['needs_redaction']:
                         effective=PHONE.sub('[电话已脱敏]',EMAIL.sub('[邮箱已脱敏]',effective))
-                    eid='SIM-'+secrets.token_hex(4).upper()
-                    receipt={'id':eid,'request_id':rid,'simulated':True,'action':request['action'],'target':request['target'],'records':request['records'],'cost':request['cost'],'effective_payload':effective,'redacted':effective!=original,'executed_at':self.clock(),'message':'模拟工具已执行；没有发送邮件、调用外部接口或修改真实数据。'}
+                    if request['action']=='issue_refund':
+                        order=self.db.execute('SELECT * FROM sandbox_orders WHERE id=?',(request['target'],)).fetchone()
+                        eid='RFND-'+secrets.token_hex(4).upper()
+                        remaining=round(order['total']-order['refunded']-request['cost'],2)
+                        self.db.execute('INSERT INTO sandbox_refunds VALUES(?,?,?,?,?,?)',(eid,rid,request['target'],request['cost'],order['currency'],self.clock()))
+                        self.db.execute('UPDATE sandbox_orders SET refunded=refunded+?,prior_refunds=prior_refunds+1 WHERE id=?',(request['cost'],request['target']))
+                        receipt={'id':eid,'request_id':rid,'simulated':False,'sandboxed':True,'provider':'local_payment_sandbox','action':request['action'],'target':request['target'],'records':1,'cost':request['cost'],'currency':order['currency'],'remaining_refundable':remaining,'effective_payload':effective,'redacted':False,'executed_at':self.clock(),'message':'退款已写入本机支付沙箱；没有调用真实支付服务。'}
+                    else:
+                        eid='SIM-'+secrets.token_hex(4).upper()
+                        receipt={'id':eid,'request_id':rid,'simulated':True,'sandboxed':False,'provider':'simulated_tool','action':request['action'],'target':request['target'],'records':request['records'],'cost':request['cost'],'effective_payload':effective,'redacted':effective!=original,'executed_at':self.clock(),'message':'模拟工具已执行；没有发送邮件、调用外部接口或修改真实数据。'}
                     self.db.execute('INSERT INTO executions VALUES(?,?,?,?,?,?)',(eid,rid,self.clock(),request['agent'],request['cost'],canonical(receipt)))
                     self.db.execute("UPDATE requests SET state='executed', token_hash=NULL WHERE id=?",(rid,))
-                    self._audit('模拟执行成功',rid,{'receipt_id':eid,'redacted':receipt['redacted'],'payload_hash':digest(effective),'cost':request['cost']})
+                    event='支付沙箱退款成功' if request['action']=='issue_refund' else '模拟执行成功'
+                    self._audit(event,rid,{'receipt_id':eid,'provider':receipt['provider'],'redacted':receipt['redacted'],'payload_hash':digest(effective),'cost':request['cost']})
                     result={'request':self._public(self._row(rid)),'receipt':receipt}
         if error: raise error
         return result
@@ -312,7 +349,9 @@ class ApprovalService:
                 previous=r['hash']
                 events.append({'seq':r['seq'],**value,'hash':r['hash']})
             receipts=[json.loads(r[0]) for r in self.db.execute('SELECT receipt FROM executions ORDER BY created DESC LIMIT 100')]
-            return {'requests':[self._public(r) for r in rows],'counts':counts,'policy':self._policy(),'events':events[-200:],'audit_valid':valid,'audit_count':len(events),'receipts':receipts}
+            orders=[dict(r,refundable=round(r['total']-r['refunded'],2)) for r in self.db.execute('SELECT * FROM sandbox_orders ORDER BY id')]
+            refunds=[dict(r) for r in self.db.execute('SELECT * FROM sandbox_refunds ORDER BY created DESC')]
+            return {'requests':[self._public(r) for r in rows],'counts':counts,'policy':self._policy(),'events':events[-200:],'audit_valid':valid,'audit_count':len(events),'receipts':receipts,'sandbox_orders':orders,'sandbox_refunds':refunds}
 
     def config(self):
-        return {'agents':AGENTS,'reviewers':REVIEWERS,'versions':VERSIONS,'scenarios':SCENARIOS,'rule_count':43,'module_count':8,'ttl':self.ttl}
+        return {'agents':AGENTS,'reviewers':REVIEWERS,'versions':VERSIONS,'scenarios':SCENARIOS,'rule_count':61,'module_count':12,'ttl':self.ttl}

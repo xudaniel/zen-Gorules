@@ -6,14 +6,14 @@
  <a class="brand" href="/"><img src="/favicon.svg" alt=""><span>AgentGate<small>智能体操作审批台</small></span></a>
  <div class="workspace"><span class="workspace-icon">D</span><div>Daniel 的实验空间<small>GoRules 决策实验室</small></div></div>
  <div class="nav-label">工作空间</div>
- <nav aria-label="主导航"><button class="nav active" data-page="console" title="操作实验台"><span>◈</span> 操作实验台</button><button class="nav" data-page="approvals" title="人工审批"><span>◎</span> 人工审批 <b id="pending-badge">0</b></button><button class="nav" data-page="audit" title="审计时间线"><span>≋</span> 审计时间线</button><button class="nav" data-page="policy" title="规则与版本"><span>◇</span> 规则与版本</button></nav>
- <div class="sidebar-bottom"><div class="engine-dot">ZEN Engine · 已连接</div><p>决策真实运行<br>工具动作全程模拟</p><div class="avatar-row"><span class="avatar">DX</span><div>Daniel Xu<small>Demo 操作员</small></div></div></div>
+ <nav aria-label="主导航"><button class="nav active" data-page="console" title="操作实验台"><span>◈</span> 操作实验台</button><button class="nav" data-page="approvals" title="人工审批"><span>◎</span> 人工审批 <b id="pending-badge">0</b></button><button class="nav" data-page="sandbox" title="退款沙箱"><span>＄</span> 退款沙箱</button><button class="nav" data-page="audit" title="审计时间线"><span>≋</span> 审计时间线</button><button class="nav" data-page="policy" title="规则与版本"><span>◇</span> 规则与版本</button></nav>
+ <div class="sidebar-bottom"><div class="engine-dot">ZEN Engine · 已连接</div><p>决策真实运行<br>退款写入本机沙箱</p><div class="avatar-row"><span class="avatar">DX</span><div>Daniel Xu<small>Demo 操作员</small></div></div></div>
 </aside>
 <main>
  <header class="topbar"><div>实验空间 <span>/</span> <strong id="breadcrumb">操作实验台</strong></div><div class="top-tags"><a class="language-switch" href="/en/" lang="en" hreflang="en" title="Switch language (reloads page)">English</a><span class="pill neutral">本机模拟环境</span><span class="policy-tag" id="policy-tag">策略 v1</span></div></header>
  <div class="content">
   <section class="page-heading"><div><div class="eyebrow">GOVERN EVERY ACTION</div><h1 id="page-title">AI 的下一步，由规则把关。</h1><p id="page-description">选择一个场景，看清每次允许、拦截和人工审批的原因。</p></div><a class="text-link" href="/rules/agent-approval.json" download="agent-approval.json">下载决策图 <span>↗</span></a></section>
-  <div class="metrics"><article><span>决策检查</span><strong>08 <small>个模块</small></strong><div>身份 · 数据 · 目标 · 环境等</div></article><article><span>规则条目</span><strong>43 <small>条规则</small></strong><div>由真实 GoRules 引擎执行</div></article><article><span>等待人工确认</span><strong id="metric-pending">0</strong><div>按所需角色分别审批</div></article><article><span>模拟执行完成</span><strong id="metric-executed">0</strong><div>授权仅可使用一次</div></article></div>
+  <div class="metrics"><article><span>决策检查</span><strong>12 <small>个模块</small></strong><div>含退款资格、风险与财务规则</div></article><article><span>规则条目</span><strong>61 <small>条规则</small></strong><div>由真实 GoRules 引擎执行</div></article><article><span>等待人工确认</span><strong id="metric-pending">0</strong><div>按所需角色分别审批</div></article><article><span>已执行操作</span><strong id="metric-executed">0</strong><div>授权仅可使用一次</div></article></div>
   <section id="page-console" class="page">
    <div class="section-heading"><h2>从一个场景开始</h2><span>选案例 → 评估 → 审批或执行</span></div>
    <div id="scenarios" class="scenarios"></div>
@@ -23,10 +23,10 @@
       <div class="form-grid">
        <label>执行智能体<select name="agent"><option value="operations">Atlas · 运营助手</option><option value="research">Iris · 研究助手</option><option value="retired">Echo · 已停用</option></select></label>
        <label>运行环境<select name="environment"><option value="sandbox">Sandbox · 测试环境</option><option value="production">Production · 生产环境</option></select></label>
-       <label>准备执行的操作<select name="action"><option value="read_file">读取文件</option><option value="send_email">发送邮件</option><option value="update_record">修改记录</option><option value="http_request">调用接口</option><option value="delete_records">删除记录</option></select></label>
+       <label>准备执行的操作<select name="action"><option value="read_file">读取文件</option><option value="send_email">发送邮件</option><option value="update_record">修改记录</option><option value="http_request">调用接口</option><option value="delete_records">删除记录</option><option value="issue_refund">发起退款 · 支付沙箱</option></select></label>
        <label>声明的数据级别<select name="data_class"><option value="public">公开资料</option><option value="internal">内部资料</option><option value="customer">客户资料</option><option value="secret">机密 / 密钥</option></select></label>
        <label class="full">操作目标 / 收件人<input name="target" required maxlength="300" autocomplete="off"></label>
-       <label>涉及记录数<input name="records" type="number" min="1" max="100000" step="1" required></label><label>预计成本 · 演示点数<input name="cost" type="number" min="0" max="1000000" step="0.01" required></label>
+       <label>涉及记录数<input name="records" type="number" min="1" max="100000" step="1" required></label><label>预计成本 / 退款金额<input name="cost" type="number" min="0" max="1000000" step="0.01" required></label>
        <label class="full">业务理由<input name="purpose" required maxlength="500"></label>
        <label class="full">关联工单 <span class="optional">可选</span><input name="ticket" placeholder="例如 CHG-DEMO-204" maxlength="120"></label>
        <label class="full">操作内容<textarea name="payload" rows="4" maxlength="15000"></textarea></label>
@@ -34,13 +34,14 @@
       <div class="form-bottom"><span>只使用虚构演示数据</span><button type="submit" class="button primary" id="evaluate-button">评估这次操作 <span>→</span></button></div>
      </form>
     </section>
-    <section class="panel decision-panel"><div class="panel-heading"><div><span class="step">02</span><h2>决策与执行</h2></div><span class="live-label">● GoRules</span></div><div id="decision"><div class="empty-state"><div class="empty-icon">◇</div><h3>每一步，都有依据。</h3><p>左侧选好操作，点击「评估这次操作」。<br>这里会逐项展开八个模块的检查结果。</p><div class="mini-flow"><span>申请</span><i>→</i><span>规则检查</span><i>→</i><span>执行 / 审批</span></div></div></div></section>
+    <section class="panel decision-panel"><div class="panel-heading"><div><span class="step">02</span><h2>决策与执行</h2></div><span class="live-label">● GoRules</span></div><div id="decision"><div class="empty-state"><div class="empty-icon">◇</div><h3>每一步，都有依据。</h3><p>左侧选好操作，点击「评估这次操作」。<br>这里会逐项展开十二个模块的检查结果。</p><div class="mini-flow"><span>申请</span><i>→</i><span>规则检查</span><i>→</i><span>执行 / 审批</span></div></div></div></section>
    </div>
-   <div class="note-bar"><span>i</span><p>此演示不会发送真实邮件、调用外部接口或修改真实数据。审批角色可切换体验，不连接企业登录系统。</p></div>
+   <div class="note-bar"><span>i</span><p>退款会更新本机支付沙箱；不会调用真实支付、邮件或外部接口。审批角色可切换体验，不连接企业登录系统。</p></div>
   </section>
   <section id="page-approvals" class="page" hidden><div class="section-heading"><h2>审批队列</h2><span>每个必需角色都确认后，才签发执行授权</span></div><div id="approval-list"></div></section>
+  <section id="page-sandbox" class="page" hidden><div class="section-heading"><h2>本机支付沙箱</h2><span>退款会真实写入本机账本，不连接支付服务</span></div><div class="panel sandbox-panel"><div class="sandbox-intro"><div><div class="eyebrow">REFUND LEDGER</div><h2>可验证的退款执行结果</h2><p>规则使用服务端订单数据计算可退余额、订单天数、历史退款和风险标记。成功执行后，余额与退款次数会立即更新。</p></div><span class="pill status-authorized">● 沙箱在线</span></div><div id="sandbox-orders" class="order-grid"></div><div class="panel-heading"><h2>退款流水</h2><span class="muted" id="refund-count">0 笔</span></div><div id="refund-ledger"></div></div></section>
   <section id="page-audit" class="page" hidden><div class="section-heading"><h2>操作审计</h2><div class="audit-controls"><span id="chain-status"></span><button class="button secondary small" id="export-audit">导出记录 ↓</button></div></div><div class="panel audit-panel"><div id="audit-list"></div></div><p class="footnote">哈希链用于检测记录意外改动；不提供独立存证或防管理员篡改保证。记录保存在本机。</p></section>
-  <section id="page-policy" class="page" hidden><div class="policy-layout"><section class="panel policy-switch"><div class="eyebrow">POLICY CONTROL</div><h2>改变规则，观察边界。</h2><p>两个版本使用同一决策图，批量复核阈值不同。切换版本会作废所有尚未执行的授权与待审批申请。</p><div id="versions"></div><div class="note-bar"><span>i</span><p>选择「策略版本对比」案例，80 条记录在 v1 中允许，在 v2 中需人工确认。</p></div></section><section class="panel"><div class="panel-heading"><h2>八道检查</h2><span class="muted">最高风险优先</span></div><div id="policy-checks"></div></section></div><section class="panel boundaries"><h2>这个 Demo 实际做了什么</h2><div><article><h3>真实决策与授权</h3><p>GoRules 决策、角色会签、五分钟有效期、内容绑定、执行前复核和一次性授权。</p></article><article><h3>模拟的工具与身份</h3><p>工具只生成模拟回执。审批人是预设演示角色，未接入企业身份、邮箱或生产系统。</p></article><article><h3>有限的内容识别</h3><p>只识别演示密钥标记、邮箱、手机号及少量越权关键词，不代表完整 DLP 或提示注入防护。</p></article></div></section></section>
+  <section id="page-policy" class="page" hidden><div class="policy-layout"><section class="panel policy-switch"><div class="eyebrow">POLICY CONTROL</div><h2>改变规则，观察边界。</h2><p>两个版本使用同一决策图，批量复核阈值不同。切换版本会作废所有尚未执行的授权与待审批申请。</p><div id="versions"></div><div class="note-bar"><span>i</span><p>选择「策略版本对比」案例，80 条记录在 v1 中允许，在 v2 中需人工确认。</p></div></section><section class="panel"><div class="panel-heading"><h2>十二道检查</h2><span class="muted">最高风险优先</span></div><div id="policy-checks"></div></section></div><section class="panel boundaries"><h2>这个 Demo 实际做了什么</h2><div><article><h3>真实决策与授权</h3><p>GoRules 决策、角色会签、五分钟有效期、内容绑定、执行前复核和一次性授权。</p></article><article><h3>本机支付沙箱</h3><p>退款会更新本机订单余额与流水。审批人是预设演示角色，不连接真实支付服务或企业登录。</p></article><article><h3>有限的内容识别</h3><p>只识别演示密钥标记、邮箱、手机号及少量越权关键词，不代表完整 DLP 或提示注入防护。</p></article></div></section></section>
   <footer><span>AgentGate / GoRules Demo</span><span>可解释的判断 · 有边界的行动</span></footer>
  </div>
 </main>
